@@ -19,6 +19,7 @@ int main(int argc, char * * argv) {
 	
 	if(argc<2) {
 		printf("Usage: machin truc.gif [indexed]\n");
+		free(gif);
 		return 1;
 	}
 	fgif = fopen(argv[1], "rb");
