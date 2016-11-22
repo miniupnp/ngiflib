@@ -35,7 +35,7 @@ void fprintf_ngiflib_gif(FILE * f, struct ngiflib_gif * g) {
 	fprintf(f, "  pixelaspectratio = %d\n", g->pixaspectratio);
 	fprintf(f, "  frbuff = 0x%08x\n", (unsigned int)g->frbuff);
 	
-	fprintf(f, "  cur_img = 0x%08x\n", g->cur_img);
+	fprintf(f, "  cur_img = 0x%08x\n", (unsigned int)g->cur_img);
 	fprintf(f, "  %d images :\n", g->nimg);
 	i = g->first_img;
 	while(i) {
@@ -400,7 +400,7 @@ int LoadGif(struct ngiflib_gif * g) {
 		u8 ext[256];
 		int blockindex=0;
 		id = GetByte(g);
-		while(size = GetByte(g)) {
+		while( (size = GetByte(g)) ) {
 		GetByteStr(g, ext, size);
 		
 		printf("extension (id=0x%02x) index %d, size = %dbytes\n",id,blockindex,size);

@@ -1,4 +1,4 @@
-ngiflib version 0.1.
+ngiflib version 0.2.
 (c) Thomas BERNARD
 All rights Reserved
 Tous droits r‚serv‚s.
