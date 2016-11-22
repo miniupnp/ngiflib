@@ -4,13 +4,18 @@ CFLAGS+=-g
 LDFLAGS=
 LDLIBS=-lSDL
 
-all:	gif2tga SDLaffgif ngiflib.o ngiflibSDL.o
+EXECUTABLES=gif2tga SDLaffgif
 
-ngiflib.o:	ngiflib.c
+all:	$(EXECUTABLES)
 
-ngiflibSDL.o:	ngiflibSDL.c
+clean:
+	$(RM) *.o $(EXECUTABLES)
 
-SDLaffgif.o:	SDLaffgif.c
+ngiflib.o:	ngiflib.c ngiflib.h
+
+ngiflibSDL.o:	ngiflibSDL.c ngiflibSDL.h
+
+SDLaffgif.o:	SDLaffgif.c ngiflibSDL.h
 
 SDLaffgif:	SDLaffgif.o ngiflibSDL.o ngiflib.o
 
