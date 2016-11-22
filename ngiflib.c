@@ -8,10 +8,10 @@
 
 /* Fonction de debug */
 void fprintf_ngiflib_img(FILE * f, struct ngiflib_img * i) {
-	fprintf(f, "  * ngiflib_img @ 0x%08x\n", (unsigned int)i);
-	fprintf(f, "    next = 0x%08x\n", (unsigned int)i->next);
-	fprintf(f, "    parent = 0x%08x\n", (unsigned int)i->parent);
-	fprintf(f, "    palette = 0x%08x\n", (unsigned int)i->palette);
+	fprintf(f, "  * ngiflib_img @ %p\n", i);
+	fprintf(f, "    next = %p\n", i->next);
+	fprintf(f, "    parent = %p\n", i->parent);
+	fprintf(f, "    palette = %p\n", i->palette);
 	fprintf(f, "    %3d couleurs", i->ncolors);
 	if(i->interlaced) fprintf(f, " interlaced");
 	fprintf(f, "\n    taille : %dx%d, pos (%d,%d)\n", i->width, i->height, i->posX, i->posY);
@@ -29,13 +29,13 @@ void GifImgDestroy(struct ngiflib_img * i) {
 /* Fonction de debug */
 void fprintf_ngiflib_gif(FILE * f, struct ngiflib_gif * g) {
 	struct ngiflib_img * i;
-	fprintf(f, "* ngiflib_gif @ 0x%08x %s\n", (unsigned int)g, g->signature);
+	fprintf(f, "* ngiflib_gif @ %p %s\n", g, g->signature);
 	fprintf(f, "  %dx%d, %d bits, %d couleurs\n", g->width, g->height, g->imgbits, g->ncolors);
-	fprintf(f, "  palette = 0x%08x, backgroundcolorindex %d\n", (unsigned int)g->palette, g->backgroundindex);
+	fprintf(f, "  palette = %p, backgroundcolorindex %d\n", g->palette, g->backgroundindex);
 	fprintf(f, "  pixelaspectratio = %d\n", g->pixaspectratio);
-	fprintf(f, "  frbuff = 0x%08x\n", (unsigned int)g->frbuff);
+	fprintf(f, "  frbuff = %p\n", g->frbuff);
 	
-	fprintf(f, "  cur_img = 0x%08x\n", (unsigned int)g->cur_img);
+	fprintf(f, "  cur_img = %p\n", g->cur_img);
 	fprintf(f, "  %d images :\n", g->nimg);
 	i = g->first_img;
 	while(i) {
