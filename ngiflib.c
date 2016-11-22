@@ -57,10 +57,13 @@ void GifDestroy(struct ngiflib_gif * g) {
  * on pourait optimiser en faisant 2 fonctions.
  */
 u8 GetByte(struct ngiflib_gif * g) {
-	if(g->mode & NGIFLIB_MODE_FROM_MEM)
-		return *(((u8 *)g->input)++);
-	else
+	if(g->mode & NGIFLIB_MODE_FROM_MEM) {
+		u8 b = *((u8 *)g->input);
+		g->input = (u8 *)g->input + 1;
+		return b;
+	} else {
 		return (u8)(getc((FILE *)g->input));
+	}
 }
 
 /* u16 GetWord()
