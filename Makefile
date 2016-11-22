@@ -1,7 +1,8 @@
-CC=gcc
+CC?=gcc
 CFLAGS=-O -Wall -I/usr/include/SDL
 CFLAGS+=-g
-LDFLAGS=-lSDL
+LDFLAGS=
+LDLIBS=-lSDL
 
 all:	gif2tga SDLaffgif ngiflib.o ngiflibSDL.o
 
