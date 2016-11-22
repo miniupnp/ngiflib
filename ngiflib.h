@@ -2,9 +2,15 @@
 #define __NGIFLIB_H_
 
 /* Types */
+#if 0
 typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned long u32;
+#endif
+#include <inttypes.h>
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
 
 /* LIBC functions :
  */
