@@ -207,15 +207,15 @@ int DecodeGifImg(struct ngiflib_img * i) {
 	u16 freesav;
 	u16 max;
 	u16 maxsav;
-	u16 act_code;
-	u16 old_code;
+	u16 act_code = 0;
+	u16 old_code = 0;
 	u16 read_byt;
 	u16 ab_prfx[4096];
 	u8 ab_suffx[4096];
 	u8 ab_stack[4096];
 	u8 nbbitsav;
 	u8 flags;
-	u8 casspecial;
+	u8 casspecial = 0;
 
 	if(!i) return -1;
 
@@ -356,7 +356,7 @@ int LoadGif(struct ngiflib_gif * g) {
 	   || g->signature[3] != '8') {
 		return -1;
 	}
-	puts(g->signature);
+	puts((char *)g->signature);
 	
 	g->width = GetWord(g);
 	g->height = GetWord(g);
@@ -421,7 +421,7 @@ int LoadGif(struct ngiflib_gif * g) {
 		case 0xFE:	//Comment Extension.
 			printf("-------------------- Comment extension --------------------\n");
 			ext[size] = '\0';
-			fputs(ext, stdout);
+			fputs((char *)ext, stdout);
 			printf("-----------------------------------------------------------\n");
 			break;
 		case 0xFF:	// app extension      faire qqch avec ?
