@@ -1,8 +1,8 @@
 ngiflib version 0.2.
 (c) Thomas BERNARD
 All rights Reserved
-Tous droits r‚serv‚s.
+Tous droits rÃ©servÃ©s.
 
 Please contact me at thomas.bernard8@free.fr if you want to use
 this library.
-Contactez moi grace … thomas.bernard8@free.fr si vous voulez utiliser cette lib.
+Contactez moi grace Ã  thomas.bernard8@free.fr si vous voulez utiliser cette lib.
