@@ -40,9 +40,16 @@ int main(int argc, char * * argv) {
 	
 	  if(err==1) {
 	  	int localpalsize;
+		char * dot;
 		img = gif->cur_img;
 		localpalsize = 1 << img->localpalbits;
-		sprintf(tganame, "%s_out%02d.tga", argv[1], gif->nimg);
+		strncpy(tganame, argv[1], sizeof(tganame));
+		dot = strrchr(tganame, '.');
+		if(dot != NULL) {
+			sprintf(dot, "_out%02d.tga", gif->nimg);
+		} else {
+			sprintf(tganame, "%s_out%02d.tga", argv[1], gif->nimg);
+		}
 		ftga = fopen(tganame, "wb");
 		putc(0, ftga);	//0
 		if(gif->mode & NGIFLIB_MODE_INDEXED) {
