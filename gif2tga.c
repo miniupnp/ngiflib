@@ -113,11 +113,11 @@ int main(int argc, char * * argv) {
 		if(img->interlaced) {
 			u8 * p = GifUninterlace(gif);
 			fwrite(p, (gif->mode & NGIFLIB_MODE_INDEXED)?1:4,
-			       (long)gif->width * (long)gif->height, ftga);
+			       (size_t)gif->width * (size_t)gif->height, ftga);
 			free(p);
 		} else {
 			fwrite(gif->frbuff, (gif->mode & NGIFLIB_MODE_INDEXED)?1:4,
-			      (long)gif->width * (long)gif->height, ftga);
+			      (size_t)gif->width * (size_t)gif->height, ftga);
 		}
 		fclose(ftga);
 		printf("%s written\n",tganame);
