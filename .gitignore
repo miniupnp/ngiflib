@@ -1,3 +1,4 @@
 *.o
 SDLaffgif
 gif2tga
+tmp/
