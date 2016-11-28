@@ -362,7 +362,10 @@ int LoadGif(struct ngiflib_gif * g) {
 	g->width = GetWord(g);
 	g->height = GetWord(g);
 	/* allocate frame buffer */
-	g->frbuff = ngiflib_malloc(4*(long)g->height*(long)g->width);
+	if((g->mode & NGIFLIB_MODE_INDEXED)==0)
+		g->frbuff = ngiflib_malloc(4*(long)g->height*(long)g->width);
+	else
+		g->frbuff = ngiflib_malloc((long)g->height*(long)g->width);
 	
 	tmp = GetByte(g);/* <Packed Fields> = Global Color Table Flag       1 Bit
 	                                      Color Resolution              3 Bits
