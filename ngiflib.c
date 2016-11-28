@@ -226,7 +226,6 @@ int DecodeGifImg(struct ngiflib_img * i) {
 
 	i->curX = i->posX;
 	i->curY = i->posY;
-//	i->tga_buff = i->tga_p = (u8*)malloc(4*(long)i->height*(long)i->width);
 
 	npix = i->width * i->height;
 	flags = GetByte(i->parent);
