@@ -235,7 +235,7 @@ int DecodeGifImg(struct ngiflib_img * i) {
 	if(flags&128) { // palette locale
 		int k;
 		int localpalsize = 1 << i->localpalbits;
-		printf("Local palette\n");
+		if(i->parent && i->parent->log) fprintf(i->parent->log, "Local palette\n");
 		i->palette = (struct ngiflib_rgb *)ngiflib_malloc(sizeof(struct ngiflib_rgb)*localpalsize);
 		for(k=0; k<localpalsize; k++) {
 			i->palette[k].r = GetByte(i->parent);
@@ -250,9 +250,11 @@ int DecodeGifImg(struct ngiflib_img * i) {
 	
 	i->imgbits = GetByte(i->parent);	// LZW Minimum Code Size
 
-	if(i->interlaced) printf("interlaced ");
-	printf("img pos(%d,%d) size %dx%d palbits=%d imgbits=%d ncolors=%d\n",
+	if(i->parent && i->parent->log) {
+		if(i->interlaced) fprintf(i->parent->log, "interlaced ");
+		fprintf(i->parent->log, "img pos(%d,%d) size %dx%d palbits=%d imgbits=%d ncolors=%d\n",
 	       i->posX, i->posY, i->width, i->height, i->localpalbits, i->imgbits, i->ncolors);
+	}
 
 	if(i->imgbits==1) {	/* fix for 1bit images ? */
 		i->imgbits = 2;
@@ -273,15 +275,15 @@ int DecodeGifImg(struct ngiflib_img * i) {
 	for(;;) {
 		act_code = GetGifWord(i);
 		if(act_code==eof) {
-			printf("End of image code\n");
+			if(i->parent && i->parent->log) fprintf(i->parent->log, "End of image code\n");
 			return 0;
 		}
 		if(npix==0) {
-			printf("assez de pixels, On se casse !\n");
+			if(i->parent && i->parent->log) fprintf(i->parent->log, "assez de pixels, On se casse !\n");
 			return 1;
 		}	
 		if(act_code==clr) {
-			printf("Code clear (free=%d)\n", free);
+			if(i->parent && i->parent->log) fprintf(i->parent->log, "Code clear (free=%d)\n", free);
 			// clear
 			free = freesav;
 			i->nbbit = nbbitsav;
@@ -355,7 +357,7 @@ int LoadGif(struct ngiflib_gif * g) {
 	   || g->signature[3] != '8') {
 		return -1;
 	}
-	puts((char *)g->signature);
+	if(g->log) fprintf(g->log, "%s\n", g->signature);
 	
 	g->width = GetWord(g);
 	g->height = GetWord(g);
@@ -374,8 +376,8 @@ int LoadGif(struct ngiflib_gif * g) {
 	g->backgroundindex = GetByte(g);
 	g->transparent_flag = 0;
 	
-	printf("%dx%d %dbits %d couleurs  bg=%d\n",
-	       g->width, g->height, g->imgbits, g->ncolors, g->backgroundindex);
+	if(g->log) fprintf(g->log, "%dx%d %dbits %d couleurs  bg=%d\n",
+	                   g->width, g->height, g->imgbits, g->ncolors, g->backgroundindex);
 
 	g->pixaspectratio = GetByte(g);	// pixel aspect ratio (0 : unspecified)
 
@@ -395,7 +397,7 @@ int LoadGif(struct ngiflib_gif * g) {
 	FillGifBackGround(g);
 	}
 	sign = GetByte(g);	// signature du prochain bloc
-	printf("0x%02X\n", sign);
+	if(g->log) fprintf(g->log, "0x%02X\n", sign);
 	while(sign!=0x3B) { // END OF GIF
 	if(sign=='!') {
 		u8 id,size;//, term;
@@ -405,7 +407,7 @@ int LoadGif(struct ngiflib_gif * g) {
 		while( (size = GetByte(g)) ) {
 		GetByteStr(g, ext, size);
 		
-		printf("extension (id=0x%02x) index %d, size = %dbytes\n",id,blockindex,size);
+		if(g->log) fprintf(g->log, "extension (id=0x%02x) index %d, size = %dbytes\n",id,blockindex,size);
 
 		switch(id) {
 		case 0xF9:	//Graphic Control Extension
@@ -414,49 +416,57 @@ int LoadGif(struct ngiflib_gif * g) {
 			g->userinputflag = (ext[0] >> 1) & 1;
 			g->delay_time = ext[1] | (ext[2]<<8);
 			g->transparent_color = ext[3];
-			printf("disp_method=%d delay_time=%d (transp=%d)transparent_color=0x%02X\n",
+			if(g->log) fprintf(g->log, "disp_method=%d delay_time=%d (transp=%d)transparent_color=0x%02X\n",
 			       g->disp_method, g->delay_time, g->transparent_flag, g->transparent_color);
 			break;
 		case 0xFE:	//Comment Extension.
-			printf("-------------------- Comment extension --------------------\n");
-			ext[size] = '\0';
-			fputs((char *)ext, stdout);
-			printf("-----------------------------------------------------------\n");
+			if(g->log) {
+				fprintf(g->log, "-------------------- Comment extension --------------------\n");
+				ext[size] = '\0';
+				fputs((char *)ext, g->log);
+				fprintf(g->log, "-----------------------------------------------------------\n");
+			}
 			break;
 		case 0xFF:	// app extension      faire qqch avec ?
 			if(blockindex==0) {
 				char appid[9];
 				ngiflib_memcpy(appid, ext, 8);
 				appid[8] = 0;
-				printf("---------------- Application extension ---------------\n");
-				printf("Application identifier : '%s', auth code : %02X %02X %02X (",
-				       appid, ext[8], ext[9], ext[10]);
-				putchar((ext[8]<32)?' ':ext[8]);
-				putchar((ext[9]<32)?' ':ext[9]);
-				putchar((ext[10]<32)?' ':ext[10]);
-				printf(")\n");
+				if(g->log) {
+					fprintf(g->log, "---------------- Application extension ---------------\n");
+					fprintf(g->log, "Application identifier : '%s', auth code : %02X %02X %02X (",
+					        appid, ext[8], ext[9], ext[10]);
+					fputc((ext[8]<32)?' ':ext[8], g->log);
+					fputc((ext[9]<32)?' ':ext[9], g->log);
+					fputc((ext[10]<32)?' ':ext[10], g->log);
+					fprintf(g->log, ")\n");
+				}
 			} else {
-				printf("Datas (as hex) : ");
-				for(i=0; i<size; i++) {
-					printf("%02x ", ext[i]);
+				if(g->log) {
+					fprintf(g->log, "Datas (as hex) : ");
+					for(i=0; i<size; i++) {
+						fprintf(g->log, "%02x ", ext[i]);
+					}
+					fprintf(g->log, "\nDatas (as text) : '");
+					for(i=0; i<size; i++) {
+						putc((ext[i]<32)?' ':ext[i], g->log);
+					}
+					fprintf(g->log, "'\n");
 				}
-				printf("\nDatas (as text) : '");
-				for(i=0; i<size; i++) {
-					putchar((ext[i]<32)?' ':ext[i]);
-				}
-				printf("'\n");
 			}
 			break;
 		case 0x01:	// plain text extension
-			printf("Plain text extension\n");
-			for(i=0; i<size; i++) {
-				putchar((ext[i]<32)?' ':ext[i]);
+			if(g->log) {
+				fprintf(g->log, "Plain text extension\n");
+				for(i=0; i<size; i++) {
+					putc((ext[i]<32)?' ':ext[i], g->log);
+				}
+				putc('\n', g->log);
 			}
-			putchar('\n');
 			break;
 		}
 		blockindex++;
-		}		
+		}
 	} else if(sign==0x2C) {
 		if(g->nimg==0) {
 			g->cur_img = ngiflib_malloc(sizeof(struct ngiflib_img));
@@ -470,11 +480,12 @@ int LoadGif(struct ngiflib_gif * g) {
 		DecodeGifImg(g->cur_img);
 		g->nimg++;
 		
-		printf("0x%02X\n", GetByte(g));//0 final
+		tmp = GetByte(g);//0 final
+		if(g->log) fprintf(g->log, "0x%02X\n", tmp);
 		return 1;	// image decodée
 	}
 	sign = GetByte(g);
-	printf("0x%02X\n", sign);
+	if(g->log) fprintf(g->log, "0x%02X\n", sign);
 	}
 	return 0;
 }

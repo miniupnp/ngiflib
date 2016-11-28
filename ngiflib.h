@@ -84,9 +84,10 @@ struct ngiflib_gif {
 	struct ngiflib_img * first_img;
 	struct ngiflib_img * cur_img;
 	struct ngiflib_rgb * palette;
-	int nimg;
 	void * input;	// used by GetByte
 	u32 * frbuff;	// frame buffer
+	FILE * log;		// to output log
+	int nimg;
 	u16 ncolors;
 	u16 width;
 	u16 height;
