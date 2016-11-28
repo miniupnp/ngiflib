@@ -3,14 +3,24 @@ CFLAGS=-O -Wall -I/usr/include/SDL
 CFLAGS+=-g
 LDFLAGS=
 LDLIBS=-lSDL
+DEPFLAGS = -MM -MT $(patsubst %.d,%.o,$@) -MT $@
 
 EXECUTABLES=gif2tga SDLaffgif
 
+SRCS = $(wildcard *.c)
+OBJS = $(patsubst %.c,%.o,$(SRCS))
+DEPS = $(patsubst %.o,%.d,$(OBJS))
+
 all:	$(EXECUTABLES)
 
-clean:
+clean:	depclean
 	$(RM) *.o $(EXECUTABLES)
 	$(RM) -r tmp/
+
+depclean:
+	$(RM) $(DEPS)
+
+depend:	$(DEPS)
 
 check:	gif2tga
 	mkdir -p tmp
@@ -28,13 +38,17 @@ check:	gif2tga
 	done ;\
 	exit $$err
 		
-
-ngiflib.o:	ngiflib.c ngiflib.h
-
-ngiflibSDL.o:	ngiflibSDL.c ngiflibSDL.h
-
-SDLaffgif.o:	SDLaffgif.c ngiflibSDL.h
-
 SDLaffgif:	SDLaffgif.o ngiflibSDL.o ngiflib.o
 
 gif2tga:	gif2tga.o ngiflib.o
+
+%.o:	%.c %.d
+
+%.d:	%.c
+	$(CC) $(CFLAGS) $(DEPFLAGS) -o $@ $<
+
+ifneq ($(MAKECMDGOALS),clean)
+ifneq ($(MAKECMDGOALS),depclean)
+-include $(DEPS)
+endif
+endif
