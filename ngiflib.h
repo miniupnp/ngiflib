@@ -39,6 +39,7 @@ struct ngiflib_img {
 	struct ngiflib_img * next;
 	struct ngiflib_gif * parent;
 	struct ngiflib_rgb * palette;
+	const u8 * srcbyte;
 	u16 ncolors;
 	u16 width;
 	u16 height;
@@ -104,6 +105,7 @@ struct ngiflib_gif {
 	u8 sort_flag;
 	u8 mode; // voir avant
 	u8 signature[7];	// 0 terminated  !=)
+	u8 byte_buffer[256];	/* for get word */
 };
 
 void GifDestroy(struct ngiflib_gif * g);
