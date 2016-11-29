@@ -96,10 +96,11 @@ void WritePixel(struct ngiflib_img * i, u8 v) {
 	struct ngiflib_gif * p = i->parent;
 	if(p->log) fprintf(p->log, "(%d,%d) %02X\n", (int)i->curX, (int)i->curY, (int)v);
 	if(v!=p->transparent_color || !p->transparent_flag) {
+		u32 offset = i->curY*p->width + i->curX;
 		if(p->mode & NGIFLIB_MODE_INDEXED)
-			((u8 *)(p->frbuff))[i->curX + i->curY*p->width] = v;
+			((u8 *)(p->frbuff))[offset] = v;
 		else
-			p->frbuff[i->curX + i->curY*p->width] =
+			p->frbuff[offset] =
 			   GifIndexToTrueColor(i->palette, v);
 	}
 	i->curX++;
