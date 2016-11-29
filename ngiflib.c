@@ -323,7 +323,6 @@ int DecodeGifImg(struct ngiflib_img * i) {
 				act_code = ab_prfx[act_code];	// prefixe
 			}
 			// act_code est concret
-			//ab_stack[stackp++] = (u8)act_code; printf("push %d   (stackp=%d)\n", act_code, stackp-1);
 			WritePixel(i, (u8)act_code); npix--;
 			casspecial = (u8)act_code;	// dernier debut de chaine !
 			while(stackp>0) {
