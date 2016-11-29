@@ -441,7 +441,11 @@ int LoadGif(struct ngiflib_gif * g) {
 	while(sign!=0x3B) { // END OF GIF
 	if(sign=='!') {
 		u8 id,size;//, term;
+#ifdef __VBCC__
+		static u8 ext[256];
+#else
 		u8 ext[256];
+#endif
 		int blockindex=0;
 		id = GetByte(g);
 		while( (size = GetByte(g)) ) {
