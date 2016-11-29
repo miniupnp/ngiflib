@@ -16,9 +16,10 @@ int main(int argc, char * * argv) {
 	const char * input_file = NULL;
 	int indexed = 0;
 	const char * output_dir = ".";
-	
+	FILE * log = NULL;
+
 	if(argc<2) {
-		printf("Usage: machin [--indexed|-i] [--outdir dir] truc.gif\n");
+		printf("Usage: machin [--log logfile] [--indexed|-i] [--outdir dir] truc.gif\n");
 		return 1;
 	}
 	for(i=1; i < argc; i++) {
@@ -32,6 +33,14 @@ int main(int argc, char * * argv) {
 					return 2;
 				}
 				output_dir = argv[i];
+			} else if(strcmp(argv[i], "--log") == 0) {
+				if(++i >= argc) {
+					fprintf(stderr, "option %s need one argument.\n", argv[i - 1]);
+					return 2;
+				}
+				log = fopen(argv[i], "w");
+				if(log == NULL) fprintf(stderr, "failed to open log file %s\n", argv[i]);
+				/*setvbuf(log, NULL, _IONBF, 0);*/
 			} else {
 				fprintf(stderr, "%s: unknown option.\n", argv[i]);
 				return 2;
@@ -46,6 +55,7 @@ int main(int argc, char * * argv) {
 
 	gif = (struct ngiflib_gif *)malloc(sizeof(struct ngiflib_gif));
 	memset(gif, 0, sizeof(struct ngiflib_gif));
+	gif->log = log;
 
 	fgif = fopen(input_file, "rb");
 	if(fgif==NULL) {
@@ -61,6 +71,7 @@ int main(int argc, char * * argv) {
 	
 	/* MAIN LOOP */
 	do {
+	  printf("LoadGif()\n");
 	  err = LoadGif(gif);	// en retour 0=fini, 1=une image decodee, -1=ERREUR
 	
 	  if(err==1) {
@@ -130,5 +141,6 @@ int main(int argc, char * * argv) {
 	fprintf_ngiflib_gif(stdout, gif);
 	GifDestroy(gif);	// libere la ram
 	
+	if(log) fclose(log);
 	return 0;
 }
