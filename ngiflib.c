@@ -94,6 +94,7 @@ int GetByteStr(struct ngiflib_gif * g, u8 * p, int n) {
  */
 void WritePixel(struct ngiflib_img * i, u8 v) {
 	struct ngiflib_gif * p = i->parent;
+	if(p->log) fprintf(p->log, "(%d,%d) %02X\n", (int)i->curX, (int)i->curY, (int)v);
 	if(v!=p->transparent_color || !p->transparent_flag) {
 		if(p->mode & NGIFLIB_MODE_INDEXED)
 			((u8 *)(p->frbuff))[i->curX + i->curY*p->width] = v;
@@ -119,10 +120,13 @@ u16 GetGifWord(struct ngiflib_img * i) {
 	r = (u16)i->lbyte;
 	bits_ok = (int)i->restbits;
 	bits_todo = (int)i->nbbit - bits_ok;
-	if( bits_todo > 0 ) {
+	if( bits_todo > 0 ) { /* i->nbbit > i->restbits */
   	  u8 newbyte;
 	  do {
-		if(i->restbyte==0) i->restbyte = GetByte(i->parent);
+		if(i->restbyte==0) {
+			i->restbyte = GetByte(i->parent);
+			if(i->parent->log) fprintf(i->parent->log, "i->restbyte = %02X\n", i->restbyte);
+		}
 		newbyte = GetByte(i->parent);
 		i->restbyte--;
 		r |= ((u16)newbyte << bits_ok);
