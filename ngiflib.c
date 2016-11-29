@@ -117,8 +117,36 @@ void WritePixel(struct ngiflib_img * i, u8 v) {
 	}
 	if(--(i->Xtogo) <= 0) {
 		i->Xtogo = i->width;
-		i->curY++;
-		p->frbuff_offset = i->curY*p->width + i->posX;
+		switch(i->pass) {
+		case 0:
+			i->curY++;
+			break;
+		case 1:	/* 1st pass : every eighth row starting from 0 */
+			i->curY += 8;
+			if(i->curY >= p->height) {
+				i->pass++;
+				i->curY = i->posY + 4;
+			}
+			break;
+		case 2:	/* 2nd pass : every eighth row starting from 4 */
+			i->curY += 8;
+			if(i->curY >= p->height) {
+				i->pass++;
+				i->curY = i->posY + 2;
+			}
+			break;
+		case 3:	/* 3rd pass : every fourth row starting from 2 */
+			i->curY += 4;
+			if(i->curY >= p->height) {
+				i->pass++;
+				i->curY = i->posY + 1;
+			}
+			break;
+		case 4:	/* 4th pass : every odd row */
+			i->curY += 2;
+			break;
+		}
+		p->frbuff_offset = (u32)i->curY*p->width + i->posX;
 	} else {
 		p->frbuff_offset++;
 	}
@@ -159,45 +187,6 @@ u16 GetGifWord(struct ngiflib_img * i) {
 	r &= ( (1 << i->nbbit) - 1 );	/* applique le bon masque
 	                             	 * pour eliminer les bits en trop */
 	return r; 
-}
-
-/* ------------------------------------------------ */
-/* u32 * GifUninterlace(struct ngiflib_gif * g);
- * Retourne un pointeur sur l'image desentrelacee.
- * Ne pas oublier de liberer cette ram apres.
- */
-u8 * GifUninterlace(struct ngiflib_gif * g) {
-	int l, linesize;
-	u8 * p, * src;
-	src = (u8 *)g->frbuff;
-	linesize = g->width;
-#ifndef NGIFLIB_INDEXED_ONLY
-	if((g->mode & NGIFLIB_MODE_INDEXED)==0) {
-		linesize <<= 2;
-	}
-#endif /* NGIFLIB_INDEXED_ONLY */
-	p = (u8 *)ngiflib_malloc(linesize*g->height);
-	/* 1st pass */
-	for(l=0; l<g->height; l+=8) {
-		ngiflib_memcpy(p + l*linesize, src, linesize);
-		src += linesize;
-	}
-	/* 2nd pass */
-	for(l=4; l<g->height; l+=8) {
-		ngiflib_memcpy(p + l*linesize, src, linesize);
-		src += linesize;
-	}
-	/* 3rd pass */
-	for(l=2; l<g->height; l+=4) {
-		ngiflib_memcpy(p + l*linesize, src, linesize);
-		src += linesize;
-	}
-	/* 4th pass */
-	for(l=1; l<g->height; l+=2) {
-		ngiflib_memcpy(p + l*linesize, src, linesize);
-		src += linesize;
-	}
-	return p;
 }
 
 /* ------------------------------------------------ */
@@ -261,11 +250,12 @@ int DecodeGifImg(struct ngiflib_img * i) {
 
 	i->Xtogo = i->width;
 	i->curY = i->posY;
-	i->parent->frbuff_offset = i->posY*i->parent->width + i->posX;
+	i->parent->frbuff_offset = (u32)i->posY*i->parent->width + i->posX;
 
 	npix = i->width * i->height;
 	flags = GetByte(i->parent);
 	i->interlaced = (flags & 64) >> 6;
+	i->pass = i->interlaced ? 1 : 0;
 	i->sort_flag = (flags & 32) >> 5;	// is local palette sorted by color frequency ?
 	i->localpalbits = (flags & 7) + 1;
 	if(flags&128) { // palette locale

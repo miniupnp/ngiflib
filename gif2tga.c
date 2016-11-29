@@ -121,15 +121,8 @@ int main(int argc, char * * argv) {
 			putc(32, ftga);	//16	// bits per pixel
 			putc(32+8, ftga); // top down
 		}
-		if(img->interlaced) {
-			u8 * p = GifUninterlace(gif);
-			fwrite(p, (gif->mode & NGIFLIB_MODE_INDEXED)?1:4,
-			       (size_t)gif->width * (size_t)gif->height, ftga);
-			free(p);
-		} else {
-			fwrite(gif->frbuff, (gif->mode & NGIFLIB_MODE_INDEXED)?1:4,
-			      (size_t)gif->width * (size_t)gif->height, ftga);
-		}
+		fwrite(gif->frbuff, (gif->mode & NGIFLIB_MODE_INDEXED)?1:4,
+		      (size_t)gif->width * (size_t)gif->height, ftga);
 		fclose(ftga);
 		printf("%s written\n",tganame);
 	  }

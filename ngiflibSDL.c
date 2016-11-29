@@ -8,7 +8,6 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 	// MODE WRAPPER A DEUX BALLES
 	SDL_Surface * surface;
 	struct ngiflib_gif * gif;
-	struct ngiflib_img * img;
 	FILE *fgif;
 	int err,i;
 	u8 * pdst, * psrc;
@@ -28,11 +27,7 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 		GifDestroy(gif);
 		return NULL;
 	}
-	img = gif->cur_img;
-	if(img->interlaced)
-		p = GifUninterlace(gif);
-	else
-		p = (u8 *)gif->frbuff;
+	p = (u8 *)gif->frbuff;
 	/*
 	surface = SDL_CreateRGBSurfaceFrom(p, gif->width, gif->height,
 	                                   32, gif->width << 2,
@@ -63,8 +58,6 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 		psrc += gif->width;
 	}
 	SDL_UnlockSurface(surface);
-	if(img->interlaced)
-		ngiflib_free(p);
 	GifDestroy(gif);
 	return surface;
 }

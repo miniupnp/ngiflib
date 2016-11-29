@@ -48,6 +48,7 @@ struct ngiflib_img {
 	u16 Xtogo;
 	u16 curY;
 	u8 interlaced;
+	u8 pass;	/* current pass of interlaced image decoding */
 	u8 sort_flag;
 	u8 localpalbits;	// bits/pixel ! (de 1 a 8)
 	// utilises juste pour la decompression
@@ -118,7 +119,6 @@ u16 GetWord(struct ngiflib_gif * g);
 int GetByteStr(struct ngiflib_gif * g, u8 * p, int n);
 void WritePixel(struct ngiflib_img * i, u8 v);
 u16 GetGifWord(struct ngiflib_img * i);
-u8 * GifUninterlace(struct ngiflib_gif * g);
 void FillGifBackGround(struct ngiflib_gif * g);
 int CheckGif(u8 * b);
 int DecodeGifImg(struct ngiflib_img * i);
