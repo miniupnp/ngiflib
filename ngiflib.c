@@ -105,11 +105,15 @@ void WritePixel(struct ngiflib_img * i, u8 v) {
 	struct ngiflib_gif * p = i->parent;
 	/*if(p->log) fprintf(p->log, "(%d,%d) %02X\n", (int)i->curX, (int)i->curY, (int)v);*/
 	if(v!=p->transparent_color || !p->transparent_flag) {
+#ifndef NGIFLIB_INDEXED_ONLY
 		if(p->mode & NGIFLIB_MODE_INDEXED) {
+#endif /* NGIFLIB_INDEXED_ONLY */
 			((u8 *)p->frbuff)[p->frbuff_offset] = v;
+#ifndef NGIFLIB_INDEXED_ONLY
 		} else
 			p->frbuff[p->frbuff_offset] =
 			   GifIndexToTrueColor(i->palette, v);
+#endif /* NGIFLIB_INDEXED_ONLY */
 	}
 	if(--(i->Xtogo) <= 0) {
 		i->Xtogo = i->width;
@@ -167,9 +171,11 @@ u8 * GifUninterlace(struct ngiflib_gif * g) {
 	u8 * p, * src;
 	src = (u8 *)g->frbuff;
 	linesize = g->width;
+#ifndef NGIFLIB_INDEXED_ONLY
 	if((g->mode & NGIFLIB_MODE_INDEXED)==0) {
 		linesize <<= 2;
 	}
+#endif /* NGIFLIB_INDEXED_ONLY */
 	p = (u8 *)ngiflib_malloc(linesize*g->height);
 	/* 1st pass */
 	for(l=0; l<g->height; l+=8) {
@@ -199,13 +205,19 @@ void FillGifBackGround(struct ngiflib_gif * g) {
 	long n = g->width*g->height;
 	u32 bg_truecolor;
 	if((g->frbuff==NULL)||(g->palette==NULL)) return;
+#ifndef NGIFLIB_INDEXED_ONLY
 	if(g->mode & NGIFLIB_MODE_INDEXED) {
+#else
+	{
+#endif /* NGIFLIB_INDEXED_ONLY */
 		u8 * p = (u8 *)g->frbuff;
 		while(n-->0) *p++ = g->backgroundindex;
+#ifndef NGIFLIB_INDEXED_ONLY
 	} else {
 		u32 * p = g->frbuff;
 		bg_truecolor = GifIndexToTrueColor(g->palette, g->backgroundindex);
 		while(n-->0) *p++ = bg_truecolor;
+#endif /* NGIFLIB_INDEXED_ONLY */
 	}
 }
 
@@ -385,9 +397,11 @@ int LoadGif(struct ngiflib_gif * g) {
 	g->width = GetWord(g);
 	g->height = GetWord(g);
 	/* allocate frame buffer */
+#ifndef NGIFLIB_INDEXED_ONLY
 	if((g->mode & NGIFLIB_MODE_INDEXED)==0)
 		g->frbuff = ngiflib_malloc(4*(long)g->height*(long)g->width);
 	else
+#endif /* NGIFLIB_INDEXED_ONLY */
 		g->frbuff = ngiflib_malloc((long)g->height*(long)g->width);
 	
 	tmp = GetByte(g);/* <Packed Fields> = Global Color Table Flag       1 Bit
