@@ -1,7 +1,8 @@
 CC?=gcc
 CFLAGS?=-O -Wall
 CFLAGS+=-I/usr/include/SDL
-#CFLAGS+=-g
+CFLAGS+=-g
+#CFLAGS+=-DDEBUG
 LDFLAGS=
 LDLIBS=-lSDL
 DEPFLAGS = -MM -MT $(patsubst %.d,%.o,$@) -MT $@

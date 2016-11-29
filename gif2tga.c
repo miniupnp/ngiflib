@@ -138,7 +138,9 @@ int main(int argc, char * * argv) {
 
 	fclose(fgif);
 	
+#if DEBUG
 	fprintf_ngiflib_gif(stdout, gif);
+#endif /* DEBUG */
 	GifDestroy(gif);	// libere la ram
 	
 	if(log) fclose(log);

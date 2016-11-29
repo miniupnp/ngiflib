@@ -7,6 +7,7 @@
  */
 
 /* Fonction de debug */
+#ifdef DEBUG
 void fprintf_ngiflib_img(FILE * f, struct ngiflib_img * i) {
 	fprintf(f, "  * ngiflib_img @ %p\n", i);
 	fprintf(f, "    next = %p\n", i->next);
@@ -17,6 +18,7 @@ void fprintf_ngiflib_img(FILE * f, struct ngiflib_img * i) {
 	fprintf(f, "\n    taille : %dx%d, pos (%d,%d)\n", i->width, i->height, i->posX, i->posY);
 	fprintf(f, "    sort_flag=%x localpalbits=%d\n", i->sort_flag, i->localpalbits);
 }
+#endif /* DEBUG */
 
 void GifImgDestroy(struct ngiflib_img * i) {
 	if(i==NULL) return;
@@ -27,6 +29,7 @@ void GifImgDestroy(struct ngiflib_img * i) {
 }
 
 /* Fonction de debug */
+#ifdef DEBUG
 void fprintf_ngiflib_gif(FILE * f, struct ngiflib_gif * g) {
 	struct ngiflib_img * i;
 	fprintf(f, "* ngiflib_gif @ %p %s\n", g, g->signature);
@@ -43,6 +46,7 @@ void fprintf_ngiflib_gif(FILE * f, struct ngiflib_gif * g) {
 		i = i->next;
 	}
 }
+#endif /* DEBUG */
 
 void GifDestroy(struct ngiflib_gif * g) {
 	if(g==NULL) return;
