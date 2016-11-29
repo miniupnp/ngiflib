@@ -45,7 +45,7 @@ struct ngiflib_img {
 	u16 height;
 	u16 posX;
 	u16 posY;
-	u16 curX;
+	u16 Xtogo;
 	u16 curY;
 	u8 interlaced;
 	u8 sort_flag;
@@ -89,6 +89,7 @@ struct ngiflib_gif {
 	void * input;	// used by GetByte
 	u32 * frbuff;	// frame buffer
 	FILE * log;		// to output log
+	u32 frbuff_offset;	/* current offset in frame buffer */
 	int nimg;
 	u16 ncolors;
 	u16 width;

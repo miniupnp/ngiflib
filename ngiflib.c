@@ -103,19 +103,20 @@ int GetByteStr(struct ngiflib_gif * g, u8 * p, int n) {
  */
 void WritePixel(struct ngiflib_img * i, u8 v) {
 	struct ngiflib_gif * p = i->parent;
-	if(p->log) fprintf(p->log, "(%d,%d) %02X\n", (int)i->curX, (int)i->curY, (int)v);
+	/*if(p->log) fprintf(p->log, "(%d,%d) %02X\n", (int)i->curX, (int)i->curY, (int)v);*/
 	if(v!=p->transparent_color || !p->transparent_flag) {
-		u32 offset = i->curY*p->width + i->curX;
-		if(p->mode & NGIFLIB_MODE_INDEXED)
-			((u8 *)(p->frbuff))[offset] = v;
-		else
-			p->frbuff[offset] =
+		if(p->mode & NGIFLIB_MODE_INDEXED) {
+			((u8 *)p->frbuff)[p->frbuff_offset] = v;
+		} else
+			p->frbuff[p->frbuff_offset] =
 			   GifIndexToTrueColor(i->palette, v);
 	}
-	i->curX++;
-	if(i->curX >= (i->posX+i->width)) {
-		i->curX = i->posX;
+	if(--(i->Xtogo) <= 0) {
+		i->Xtogo = i->width;
 		i->curY++;
+		p->frbuff_offset = i->curY*p->width + i->posX;
+	} else {
+		p->frbuff_offset++;
 	}
 }
 
@@ -246,8 +247,9 @@ int DecodeGifImg(struct ngiflib_img * i) {
 	i->width = GetWord(i->parent);	// SizeX
 	i->height = GetWord(i->parent);	// SizeY
 
-	i->curX = i->posX;
+	i->Xtogo = i->width;
 	i->curY = i->posY;
+	i->parent->frbuff_offset = i->posY*i->parent->width + i->posX;
 
 	npix = i->width * i->height;
 	flags = GetByte(i->parent);
