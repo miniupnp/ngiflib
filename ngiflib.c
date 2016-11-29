@@ -215,9 +215,15 @@ int DecodeGifImg(struct ngiflib_img * i) {
 	u16 act_code = 0;
 	u16 old_code = 0;
 	u16 read_byt;
+#ifdef __VBCC__
+	static u16 ab_prfx[4096];
+	static u8 ab_suffx[4096];
+	static u8 ab_stack[4096];
+#else
 	u16 ab_prfx[4096];
 	u8 ab_suffx[4096];
 	u8 ab_stack[4096];
+#endif
 	u8 nbbitsav;
 	u8 flags;
 	u8 casspecial = 0;
