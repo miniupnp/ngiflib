@@ -252,7 +252,7 @@ int DecodeGifImg(struct ngiflib_img * i) {
 	i->curY = i->posY;
 	i->parent->frbuff_offset = (u32)i->posY*i->parent->width + i->posX;
 
-	npix = i->width * i->height;
+	npix = (long)i->width * i->height;
 	flags = GetByte(i->parent);
 	i->interlaced = (flags & 64) >> 6;
 	i->pass = i->interlaced ? 1 : 0;
@@ -293,7 +293,7 @@ int DecodeGifImg(struct ngiflib_img * i) {
 	i->nbbit = nbbitsav;
 	max = (1 << nbbitsav) - 1;
 	maxsav = max;
-	stackp = 0;
+	stackp = 4096;
 	
 	i->restbits = 0;	// initialise le "buffer" de lecture
 	i->restbyte = 0;	// des codes LZW
@@ -322,23 +322,21 @@ int DecodeGifImg(struct ngiflib_img * i) {
 			read_byt = act_code;
 			if(act_code>=free) {	// code pas encore dans alphabet
 //				printf("Code pas dans alphabet : %d>=%d push %d\n", act_code, free, casspecial);
-				ab_stack[stackp++] = (u8)casspecial; // dernier debut de chaine !
+				ab_stack[--stackp] = (u8)casspecial; // dernier debut de chaine !
 				act_code = old_code;
 			}
 //			printf("actcode=%d\n", act_code);
 			while(act_code>clr) { // code non concret
 				// fillstackloop empile les suffixes !
-//				printf("fillstackloop : word=%4d (stackp=%d) suffix=%d\n",
-//				       act_code, stackp, ab_suffx[act_code]);
-				ab_stack[stackp++] = ab_suffx[act_code];
+				ab_stack[--stackp] = ab_suffx[act_code];
 				act_code = ab_prfx[act_code];	// prefixe
 			}
 			// act_code est concret
-			WritePixel(i, (u8)act_code); npix--;
 			casspecial = (u8)act_code;	// dernier debut de chaine !
-			while(stackp>0) {
-				WritePixel(i, ab_stack[--stackp]); npix--;
-//				printf("%02X ", ab_stack[stackp]);
+			WritePixel(i, casspecial); npix--;
+			while(stackp < 4096) {
+				/* TODO : make a WritePixels() func */
+				WritePixel(i, ab_stack[stackp++]); npix--;
 			}
 //			putchar('\n');
 			if(free<4096) { // la taille du dico est 4096 max !
