@@ -584,6 +584,10 @@ int LoadGif(struct ngiflib_gif * g) {
 			tmp = GetByte(g);//0 final
 			if(g->log) fprintf(g->log, "0x%02X\n", tmp);
 			return 1;	// image decodée
+		default:
+			/* unexpected byte */
+			if(g->log) fprintf(g->log, "unexpected signature 0x%02X\n", sign);
+			return -1;
 		}
 	}
 }
