@@ -7,6 +7,11 @@ LDFLAGS=$(shell pkg-config sdl --libs-only-L)
 LDLIBS=$(shell pkg-config sdl --libs-only-l)
 DEPFLAGS = -MM -MT $(patsubst %.d,%.o,$@) -MT $@
 
+OS=$(shell uname -s)
+ifeq ($(OS), Darwin)
+LDLIBS += -framework Cocoa
+endif
+
 EXECUTABLES=gif2tga SDLaffgif
 
 SRCS = $(wildcard *.c)
