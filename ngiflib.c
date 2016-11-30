@@ -256,7 +256,7 @@ u16 GetGifWord(struct ngiflib_img * i) {
 
 /* ------------------------------------------------ */
 void FillGifBackGround(struct ngiflib_gif * g) {
-	long n = g->width*g->height;
+	long n = (long)g->width*g->height;
 	u32 bg_truecolor;
 	if((g->frbuff==NULL)||(g->palette==NULL)) return;
 #ifndef NGIFLIB_INDEXED_ONLY
@@ -264,8 +264,7 @@ void FillGifBackGround(struct ngiflib_gif * g) {
 #else
 	{
 #endif /* NGIFLIB_INDEXED_ONLY */
-		u8 * p = (u8 *)g->frbuff;
-		while(n-->0) *p++ = g->backgroundindex;
+		ngiflib_memset(g->frbuff, g->backgroundindex, n);
 #ifndef NGIFLIB_INDEXED_ONLY
 	} else {
 		u32 * p = g->frbuff;

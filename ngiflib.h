@@ -20,6 +20,7 @@ typedef uint32_t u32;
 #define ngiflib_free free
 #include <string.h>
 #define ngiflib_memcpy memcpy
+#define ngiflib_memset memset
 
 /* Modes pour struct ngiflib_gif.mode
  */
