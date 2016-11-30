@@ -435,56 +435,56 @@ int LoadGif(struct ngiflib_gif * g) {
 	
 	if(g->nimg==0) {
 	GetByteStr(g, g->signature, 6);
-	g->signature[6] = '\0';
-	if(   g->signature[0] != 'G'
-	   || g->signature[1] != 'I'
-	   || g->signature[2] != 'F'
-	   || g->signature[3] != '8') {
-		return -1;
-	}
-	if(g->log) fprintf(g->log, "%s\n", g->signature);
-	
-	g->width = GetWord(g);
-	g->height = GetWord(g);
-	/* allocate frame buffer */
-#ifndef NGIFLIB_INDEXED_ONLY
-	if((g->mode & NGIFLIB_MODE_INDEXED)==0)
-		g->frbuff = ngiflib_malloc(4*(long)g->height*(long)g->width);
-	else
-#endif /* NGIFLIB_INDEXED_ONLY */
-		g->frbuff = ngiflib_malloc((long)g->height*(long)g->width);
-	
-	tmp = GetByte(g);/* <Packed Fields> = Global Color Table Flag       1 Bit
-	                                      Color Resolution              3 Bits
-	                                      Sort Flag                     1 Bit
-	                                      Size of Global Color Table    3 Bits */
-	g->colorresolution = ((tmp & 0x70) >> 4) + 1;
-	g->sort_flag = (tmp & 8) >> 3;
-	g->imgbits = (tmp & 7) + 1;	// Global Palette color resolution
-	g->ncolors = 1 << g->imgbits;	//
-	
-	g->backgroundindex = GetByte(g);
-	g->transparent_flag = 0;
-	
-	if(g->log) fprintf(g->log, "%dx%d %dbits %d couleurs  bg=%d\n",
-	                   g->width, g->height, g->imgbits, g->ncolors, g->backgroundindex);
-
-	g->pixaspectratio = GetByte(g);	// pixel aspect ratio (0 : unspecified)
-
-	if(tmp&0x80) {
-		// la palette globale suit.
-		g->palette = (struct ngiflib_rgb *)ngiflib_malloc(sizeof(struct ngiflib_rgb)*g->ncolors);
-		for(i=0; i<g->ncolors; i++) {
-			g->palette[i].r = GetByte(g);
-			g->palette[i].g = GetByte(g);
-			g->palette[i].b = GetByte(g);
-	//		printf("%3d %02X %02X %02X\n", i, g->palette[i].r,g->palette[i].g,g->palette[i].b);
+		g->signature[6] = '\0';
+		if(   g->signature[0] != 'G'
+		   || g->signature[1] != 'I'
+		   || g->signature[2] != 'F'
+		   || g->signature[3] != '8') {
+			return -1;
 		}
-	} else {
-		g->palette = NULL;
-	}
-	
-	FillGifBackGround(g);
+		if(g->log) fprintf(g->log, "%s\n", g->signature);
+
+		g->width = GetWord(g);
+		g->height = GetWord(g);
+		/* allocate frame buffer */
+#ifndef NGIFLIB_INDEXED_ONLY
+		if((g->mode & NGIFLIB_MODE_INDEXED)==0)
+			g->frbuff = ngiflib_malloc(4*(long)g->height*(long)g->width);
+		else
+#endif /* NGIFLIB_INDEXED_ONLY */
+			g->frbuff = ngiflib_malloc((long)g->height*(long)g->width);
+
+		tmp = GetByte(g);/* <Packed Fields> = Global Color Table Flag       1 Bit
+		                                      Color Resolution              3 Bits
+		                                      Sort Flag                     1 Bit
+		                                      Size of Global Color Table    3 Bits */
+		g->colorresolution = ((tmp & 0x70) >> 4) + 1;
+		g->sort_flag = (tmp & 8) >> 3;
+		g->imgbits = (tmp & 7) + 1;	// Global Palette color resolution
+		g->ncolors = 1 << g->imgbits;	//
+
+		g->backgroundindex = GetByte(g);
+		g->transparent_flag = 0;
+
+		if(g->log) fprintf(g->log, "%dx%d %dbits %d couleurs  bg=%d\n",
+		                   g->width, g->height, g->imgbits, g->ncolors, g->backgroundindex);
+
+		g->pixaspectratio = GetByte(g);	// pixel aspect ratio (0 : unspecified)
+
+		if(tmp&0x80) {
+			// la palette globale suit.
+			g->palette = (struct ngiflib_rgb *)ngiflib_malloc(sizeof(struct ngiflib_rgb)*g->ncolors);
+			for(i=0; i<g->ncolors; i++) {
+				g->palette[i].r = GetByte(g);
+				g->palette[i].g = GetByte(g);
+				g->palette[i].b = GetByte(g);
+		//		printf("%3d %02X %02X %02X\n", i, g->palette[i].r,g->palette[i].g,g->palette[i].b);
+			}
+		} else {
+			g->palette = NULL;
+		}
+
+		FillGifBackGround(g);
 	}
 	sign = GetByte(g);	// signature du prochain bloc
 	if(g->log) fprintf(g->log, "0x%02X\n", sign);
