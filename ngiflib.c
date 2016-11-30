@@ -103,7 +103,7 @@ int GetByteStr(struct ngiflib_gif * g, u8 * p, int n) {
  */
 void WritePixel(struct ngiflib_img * i, u8 v) {
 	struct ngiflib_gif * p = i->parent;
-	/*if(p->log) fprintf(p->log, "(%d,%d) %02X\n", (int)i->curX, (int)i->curY, (int)v);*/
+
 	if(v!=p->transparent_color || !p->transparent_flag) {
 #ifndef NGIFLIB_INDEXED_ONLY
 		if(p->mode & NGIFLIB_MODE_INDEXED) {
@@ -158,8 +158,8 @@ void WritePixel(struct ngiflib_img * i, u8 v) {
 void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n) {
 	u16 tocopy;	
 	struct ngiflib_gif * p = i->parent;
-	/*if(p->log) fprintf(p->log, "(%d,%d) %02X\n", (int)i->curX, (int)i->curY, (int)v);*/
-	while(n > 0) {
+
+	for(; n > 0; n -= tocopy) {
 		tocopy = (i->Xtogo < n) ? i->Xtogo : n;
 		if(!p->transparent_flag) {
 #ifndef NGIFLIB_INDEXED_ONLY
@@ -214,7 +214,6 @@ void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n) {
 			}
 			p->frbuff_offset = (u32)i->curY*p->width + i->posX;
 		}
-		n -= tocopy;
 	}
 }
 
