@@ -483,8 +483,6 @@ int LoadGif(struct ngiflib_gif * g) {
 		} else {
 			g->palette = NULL;
 		}
-
-		FillGifBackGround(g);
 	}
 
 	for(;;) {
@@ -519,6 +517,7 @@ int LoadGif(struct ngiflib_gif * g) {
 					g->transparent_color = ext[3];
 					if(g->log) fprintf(g->log, "disp_method=%d delay_time=%d (transp=%d)transparent_color=0x%02X\n",
 					       g->disp_method, g->delay_time, g->transparent_flag, g->transparent_color);
+					if(g->transparent_flag) FillGifBackGround(g);
 					break;
 				case 0xFE:	//Comment Extension.
 					if(g->log) {
