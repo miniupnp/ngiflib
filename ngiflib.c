@@ -152,6 +152,72 @@ void WritePixel(struct ngiflib_img * i, u8 v) {
 	}
 }
 
+/* void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n);
+ * ecrit les pixels dans le frame buffer
+ */
+void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n) {
+	u16 tocopy;	
+	struct ngiflib_gif * p = i->parent;
+	/*if(p->log) fprintf(p->log, "(%d,%d) %02X\n", (int)i->curX, (int)i->curY, (int)v);*/
+	while(n > 0) {
+		tocopy = (i->Xtogo < n) ? i->Xtogo : n;
+		if(!p->transparent_flag) {
+#ifndef NGIFLIB_INDEXED_ONLY
+			if(p->mode & NGIFLIB_MODE_INDEXED) {
+#endif /* NGIFLIB_INDEXED_ONLY */
+				ngiflib_memcpy((u8 *)p->frbuff + p->frbuff_offset, pixels, tocopy);
+				pixels += tocopy;
+				p->frbuff_offset += tocopy;
+#ifndef NGIFLIB_INDEXED_ONLY
+			} else {
+				int j;
+				for(j = (int)tocopy; j > 0; j--) {
+					p->frbuff[p->frbuff_offset++] =
+					   GifIndexToTrueColor(i->palette, *pixels++);
+				}
+			}
+#endif /* NGIFLIB_INDEXED_ONLY */
+		} else {
+			/* TODO */
+		}
+		i->Xtogo -= tocopy;
+		if(i->Xtogo == 0) {
+			i->Xtogo = i->width;
+			switch(i->pass) {
+			case 0:
+				i->curY++;
+				break;
+			case 1:	/* 1st pass : every eighth row starting from 0 */
+				i->curY += 8;
+				if(i->curY >= p->height) {
+					i->pass++;
+					i->curY = i->posY + 4;
+				}
+				break;
+			case 2:	/* 2nd pass : every eighth row starting from 4 */
+				i->curY += 8;
+				if(i->curY >= p->height) {
+					i->pass++;
+					i->curY = i->posY + 2;
+				}
+				break;
+			case 3:	/* 3rd pass : every fourth row starting from 2 */
+				i->curY += 4;
+				if(i->curY >= p->height) {
+					i->pass++;
+					i->curY = i->posY + 1;
+				}
+				break;
+			case 4:	/* 4th pass : every odd row */
+				i->curY += 2;
+				break;
+			}
+			p->frbuff_offset = (u32)i->curY*p->width + i->posX;
+		}
+		n -= tocopy;
+	}
+}
+
 /*
  * u16 GetGifWord(struct ngiflib_img * i);
  * Renvoie un code LZW (taille variable)
@@ -333,11 +399,9 @@ int DecodeGifImg(struct ngiflib_img * i) {
 			}
 			// act_code est concret
 			casspecial = (u8)act_code;	// dernier debut de chaine !
-			WritePixel(i, casspecial); npix--;
-			while(stackp < 4096) {
-				/* TODO : make a WritePixels() func */
-				WritePixel(i, ab_stack[stackp++]); npix--;
-			}
+			ab_stack[--stackp] = casspecial;	/* push on stack */
+			WritePixels(i, ab_stack + stackp, 4096 - stackp);	/* unstack all pixels at once */
+			stackp = 4096;
 //			putchar('\n');
 			if(free<4096) { // la taille du dico est 4096 max !
 				ab_prfx[free] = old_code;
