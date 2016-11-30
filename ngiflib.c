@@ -434,7 +434,7 @@ int LoadGif(struct ngiflib_gif * g) {
 	if(!g) return -1;	
 	
 	if(g->nimg==0) {
-	GetByteStr(g, g->signature, 6);
+		GetByteStr(g, g->signature, 6);
 		g->signature[6] = '\0';
 		if(   g->signature[0] != 'G'
 		   || g->signature[1] != 'I'
