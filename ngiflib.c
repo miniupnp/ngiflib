@@ -486,102 +486,107 @@ int LoadGif(struct ngiflib_gif * g) {
 
 		FillGifBackGround(g);
 	}
-	sign = GetByte(g);	// signature du prochain bloc
-	if(g->log) fprintf(g->log, "0x%02X\n", sign);
-	while(sign!=0x3B) { // END OF GIF
-	if(sign=='!') {
-		u8 id,size;//, term;
-#ifdef __VBCC__
-		static u8 ext[256];
-#else
-		u8 ext[256];
-#endif
-		int blockindex=0;
-		id = GetByte(g);
-		while( (size = GetByte(g)) ) {
-		GetByteStr(g, ext, size);
-		
-		if(g->log) fprintf(g->log, "extension (id=0x%02x) index %d, size = %dbytes\n",id,blockindex,size);
 
-		switch(id) {
-		case 0xF9:	//Graphic Control Extension
-			g->disp_method = (ext[0] >> 2) & 7;
-			g->transparent_flag = ext[0] & 1;
-			g->userinputflag = (ext[0] >> 1) & 1;
-			g->delay_time = ext[1] | (ext[2]<<8);
-			g->transparent_color = ext[3];
-			if(g->log) fprintf(g->log, "disp_method=%d delay_time=%d (transp=%d)transparent_color=0x%02X\n",
-			       g->disp_method, g->delay_time, g->transparent_flag, g->transparent_color);
-			break;
-		case 0xFE:	//Comment Extension.
-			if(g->log) {
-				fprintf(g->log, "-------------------- Comment extension --------------------\n");
-				ext[size] = '\0';
-				fputs((char *)ext, g->log);
-				fprintf(g->log, "-----------------------------------------------------------\n");
+	for(;;) {
+		u8 id,size;
+		int blockindex;
+
+		sign = GetByte(g);	// signature du prochain bloc
+		if(g->log) fprintf(g->log, "0x%02X\n", sign);
+		switch(sign) {
+		case 0x3B:	/* END OF GIF */
+			return 0;
+		case '!':	/* Extension introducer 0x21 */
+			id = GetByte(g);
+			blockindex = 0;
+			while( (size = GetByte(g)) ) {
+#ifdef __VBCC__
+				static u8 ext[256];
+#else
+				u8 ext[256];
+#endif
+
+				GetByteStr(g, ext, size);
+
+				if(g->log) fprintf(g->log, "extension (id=0x%02x) index %d, size = %dbytes\n",id,blockindex,size);
+
+				switch(id) {
+				case 0xF9:	//Graphic Control Extension
+					g->disp_method = (ext[0] >> 2) & 7;
+					g->transparent_flag = ext[0] & 1;
+					g->userinputflag = (ext[0] >> 1) & 1;
+					g->delay_time = ext[1] | (ext[2]<<8);
+					g->transparent_color = ext[3];
+					if(g->log) fprintf(g->log, "disp_method=%d delay_time=%d (transp=%d)transparent_color=0x%02X\n",
+					       g->disp_method, g->delay_time, g->transparent_flag, g->transparent_color);
+					break;
+				case 0xFE:	//Comment Extension.
+					if(g->log) {
+						fprintf(g->log, "-------------------- Comment extension --------------------\n");
+						ext[size] = '\0';
+						fputs((char *)ext, g->log);
+						fprintf(g->log, "-----------------------------------------------------------\n");
+					}
+					break;
+				case 0xFF:	// app extension      faire qqch avec ?
+					if(blockindex==0) {
+						char appid[9];
+						ngiflib_memcpy(appid, ext, 8);
+						appid[8] = 0;
+						if(g->log) {
+							fprintf(g->log, "---------------- Application extension ---------------\n");
+							fprintf(g->log, "Application identifier : '%s', auth code : %02X %02X %02X (",
+							        appid, ext[8], ext[9], ext[10]);
+							fputc((ext[8]<32)?' ':ext[8], g->log);
+							fputc((ext[9]<32)?' ':ext[9], g->log);
+							fputc((ext[10]<32)?' ':ext[10], g->log);
+							fprintf(g->log, ")\n");
+						}
+					} else {
+						if(g->log) {
+							fprintf(g->log, "Datas (as hex) : ");
+							for(i=0; i<size; i++) {
+								fprintf(g->log, "%02x ", ext[i]);
+							}
+							fprintf(g->log, "\nDatas (as text) : '");
+							for(i=0; i<size; i++) {
+								putc((ext[i]<32)?' ':ext[i], g->log);
+							}
+							fprintf(g->log, "'\n");
+						}
+					}
+					break;
+				case 0x01:	// plain text extension
+					if(g->log) {
+						fprintf(g->log, "Plain text extension\n");
+						for(i=0; i<size; i++) {
+							putc((ext[i]<32)?' ':ext[i], g->log);
+						}
+						putc('\n', g->log);
+					}
+					break;
+				}
+				blockindex++;
 			}
 			break;
-		case 0xFF:	// app extension      faire qqch avec ?
-			if(blockindex==0) {
-				char appid[9];
-				ngiflib_memcpy(appid, ext, 8);
-				appid[8] = 0;
-				if(g->log) {
-					fprintf(g->log, "---------------- Application extension ---------------\n");
-					fprintf(g->log, "Application identifier : '%s', auth code : %02X %02X %02X (",
-					        appid, ext[8], ext[9], ext[10]);
-					fputc((ext[8]<32)?' ':ext[8], g->log);
-					fputc((ext[9]<32)?' ':ext[9], g->log);
-					fputc((ext[10]<32)?' ':ext[10], g->log);
-					fprintf(g->log, ")\n");
-				}
+		case 0x2C:	/* Image separator */
+			if(g->nimg==0) {
+				g->cur_img = ngiflib_malloc(sizeof(struct ngiflib_img));
+				g->first_img = g->cur_img;
 			} else {
-				if(g->log) {
-					fprintf(g->log, "Datas (as hex) : ");
-					for(i=0; i<size; i++) {
-						fprintf(g->log, "%02x ", ext[i]);
-					}
-					fprintf(g->log, "\nDatas (as text) : '");
-					for(i=0; i<size; i++) {
-						putc((ext[i]<32)?' ':ext[i], g->log);
-					}
-					fprintf(g->log, "'\n");
-				}
+				g->cur_img->next = ngiflib_malloc(sizeof(struct ngiflib_img));
+				g->cur_img = g->cur_img->next;
 			}
-			break;
-		case 0x01:	// plain text extension
-			if(g->log) {
-				fprintf(g->log, "Plain text extension\n");
-				for(i=0; i<size; i++) {
-					putc((ext[i]<32)?' ':ext[i], g->log);
-				}
-				putc('\n', g->log);
-			}
-			break;
+			g->cur_img->next = NULL;
+			g->cur_img->parent = g;
+			DecodeGifImg(g->cur_img);
+			g->nimg++;
+
+			tmp = GetByte(g);//0 final
+			if(g->log) fprintf(g->log, "0x%02X\n", tmp);
+			return 1;	// image decodée
 		}
-		blockindex++;
-		}
-	} else if(sign==0x2C) {
-		if(g->nimg==0) {
-			g->cur_img = ngiflib_malloc(sizeof(struct ngiflib_img));
-			g->first_img = g->cur_img;
-		} else {
-			g->cur_img->next = ngiflib_malloc(sizeof(struct ngiflib_img));
-			g->cur_img = g->cur_img->next;
-		}
-		g->cur_img->next = NULL;
-		g->cur_img->parent = g;
-		DecodeGifImg(g->cur_img);
-		g->nimg++;
-		
-		tmp = GetByte(g);//0 final
-		if(g->log) fprintf(g->log, "0x%02X\n", tmp);
-		return 1;	// image decodée
 	}
-	sign = GetByte(g);
-	if(g->log) fprintf(g->log, "0x%02X\n", sign);
-	}
-	return 0;
 }
 
 u32 GifIndexToTrueColor(struct ngiflib_rgb * palette, u8 v) {
