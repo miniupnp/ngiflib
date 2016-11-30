@@ -2,8 +2,9 @@ CC?=gcc
 CFLAGS?=-O -Wall
 CFLAGS+=-g
 #CFLAGS+=-DDEBUG
-LDFLAGS=
-LDLIBS=-lSDL
+CFLAGS+=$(shell pkg-config sdl --cflags)
+LDFLAGS=$(shell pkg-config sdl --libs-only-L)
+LDLIBS=$(shell pkg-config sdl --libs-only-l)
 DEPFLAGS = -MM -MT $(patsubst %.d,%.o,$@) -MT $@
 
 EXECUTABLES=gif2tga SDLaffgif
