@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "SDL.h"
+#include <SDL/SDL.h>
 #include "ngiflibSDL.h"
 
 static int appactive = 1;

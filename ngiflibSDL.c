@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "ngiflib.h"
 #include "ngiflibSDL.h"
 
 /* SDL_LoadGIF a le meme comportement que SDL_LoadBMP */

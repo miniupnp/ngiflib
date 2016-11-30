@@ -1,6 +1,5 @@
 CC?=gcc
 CFLAGS?=-O -Wall
-CFLAGS+=-I/usr/include/SDL
 CFLAGS+=-g
 #CFLAGS+=-DDEBUG
 LDFLAGS=
