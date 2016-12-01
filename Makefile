@@ -33,16 +33,14 @@ depend:	$(DEPS)
 
 check:	gif2tga
 	mkdir -p tmp
-	@cd samples; for gif in $(REFIMGS); do \
+	@for gif in $(REFIMGS); do \
 		base=$$(basename $$gif .gif) ;\
-		../gif2tga --indexed --outdir ../tmp $${base}.gif &&\
-		mv ../tmp/$${base}_out01.tga ../tmp/$${base}_indexed.tga &&\
-		../gif2tga --outdir ../tmp $${base}.gif &&\
-		mv ../tmp/$${base}_out01.tga ../tmp/$${base}_truecolor.tga ;\
+		./gif2tga --indexed --outbase tmp/$${base}_indexed samples/$${base}.gif && \
+		./gif2tga --outbase tmp/$${base}_truecolor samples/$${base}.gif ;\
 	done
 	@err=0 ;\
 	for tga in tmp/*.tga; do \
-		ref="ref/$$(basename $$tga).gz" ;\
+		ref="ref/$$(basename $$tga|sed 's/_out01//').gz" ;\
 		zcat $$ref | cmp -b $$tga || { echo "ERROR on $$tga" ; err=1; } ;\
 	done ;\
 	exit $$err

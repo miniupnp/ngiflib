@@ -15,11 +15,11 @@ int main(int argc, char * * argv) {
 	char tganame[256];
 	const char * input_file = NULL;
 	int indexed = 0;
-	const char * output_dir = ".";
+	const char * outbase = NULL;
 	FILE * log = NULL;
 
 	if(argc<2) {
-		printf("Usage: machin [--log logfile] [--indexed|-i] [--outdir dir] truc.gif\n");
+		printf("Usage: machin [--log logfile] [--indexed|-i] [--outbase path/file] truc.gif\n");
 		return 1;
 	}
 	for(i=1; i < argc; i++) {
@@ -27,12 +27,12 @@ int main(int argc, char * * argv) {
 			if(strcmp(argv[i], "--indexed") == 0
 			   || strcmp(argv[i], "-i") == 0) {
 				indexed = 1;
-			} else if(strcmp(argv[i], "--outdir") == 0) {
+			} else if(strcmp(argv[i], "--outbase") == 0) {
 				if(++i >= argc) {
 					fprintf(stderr, "option %s need one argument.\n", argv[i - 1]);
 					return 2;
 				}
-				output_dir = argv[i];
+				outbase = argv[i];
 			} else if(strcmp(argv[i], "--log") == 0) {
 				if(++i >= argc) {
 					fprintf(stderr, "option %s need one argument.\n", argv[i - 1]);
@@ -79,10 +79,14 @@ int main(int argc, char * * argv) {
 		char * p;
 		img = gif->cur_img;
 		localpalsize = 1 << img->localpalbits;
-		snprintf(tganame, sizeof(tganame), "%s/%s", output_dir, input_file);
-		p = strrchr(tganame, '.');
-		if(p == NULL) {
-			p = tganame + strlen(tganame);
+		if(outbase) {
+			p = tganame + snprintf(tganame, sizeof(tganame), "%s", outbase);
+		} else {
+			snprintf(tganame, sizeof(tganame), "%s", input_file);
+			p = strrchr(tganame, '.');
+			if(p == NULL) {
+				p = tganame + strlen(tganame);
+			}
 		}
 		sprintf(p, "_out%02d.tga", gif->nimg);
 		ftga = fopen(tganame, "wb");
