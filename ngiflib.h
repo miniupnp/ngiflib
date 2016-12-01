@@ -56,6 +56,7 @@ struct ngiflib_img {
 	u8 lbyte;
 	u8 restbyte;
 	u8 nbbit;	// bits courants du code LZW
+	u16 max;	/* maximum value = (1 << nbbit) - 1 */
 	u8 restbits;
 	u8 imgbits;	// bits mini du code LZW (de 2 a 9 ?)
 };

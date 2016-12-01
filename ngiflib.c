@@ -249,8 +249,7 @@ static u16 GetGifWord(struct ngiflib_img * i) {
 		i->restbits -= i->nbbit;
 		i->lbyte >>= i->nbbit;
 	}
-	r &= ( (1 << i->nbbit) - 1 );	/* applique le bon masque
-	                             	 * pour eliminer les bits en trop */
+	r &= i->max;	/* applique le bon masque pour eliminer les bits en trop */
 	return r; 
 }
 
@@ -287,7 +286,6 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	u16 eof;
 	u16 free;
 	u16 freesav;
-	u16 max;
 	u16 maxsav;
 	u16 act_code = 0;
 	u16 old_code = 0;
@@ -355,8 +353,8 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	freesav = free;
 	nbbitsav = i->imgbits + 1;
 	i->nbbit = nbbitsav;
-	max = (1 << nbbitsav) - 1;
-	maxsav = max;
+	maxsav = (1 << nbbitsav) - 1;
+	i->max = maxsav;
 	stackp = 4096;
 	
 	i->restbits = 0;	// initialise le "buffer" de lecture
@@ -377,7 +375,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			// clear
 			free = freesav;
 			i->nbbit = nbbitsav;
-			max = maxsav;
+			i->max = maxsav;
 			act_code = GetGifWord(i);
 			casspecial = (u8)act_code;
 			old_code = act_code;
@@ -407,9 +405,9 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 				free++;
 			}
 			old_code = read_byt;
-			if((free>max)&&(i->nbbit<12)) {
+			if((free>i->max)&&(i->nbbit<12)) {
 				i->nbbit++;	// 1 bit de plus pour les codes LZW
-				max = (1 << i->nbbit) - 1;
+				i->max = (1 << i->nbbit) - 1;
 			}
 		}
 			
