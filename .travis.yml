@@ -20,6 +20,4 @@ before_install:
 
 script:
   - make
-
-after_success:
   - 'make check'
