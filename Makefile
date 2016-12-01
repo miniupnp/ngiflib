@@ -36,9 +36,9 @@ check:	gif2tga
 	@cd samples; for gif in $(REFIMGS); do \
 		base=$$(basename $$gif .gif) ;\
 		../gif2tga --indexed --outdir ../tmp $${base}.gif &&\
-		mv -v ../tmp/$${base}_out01.tga ../tmp/$${base}_indexed.tga &&\
+		mv ../tmp/$${base}_out01.tga ../tmp/$${base}_indexed.tga &&\
 		../gif2tga --outdir ../tmp $${base}.gif &&\
-		mv -v ../tmp/$${base}_out01.tga ../tmp/$${base}_truecolor.tga ;\
+		mv ../tmp/$${base}_out01.tga ../tmp/$${base}_truecolor.tga ;\
 	done
 	@err=0 ;\
 	for tga in tmp/*.tga; do \
