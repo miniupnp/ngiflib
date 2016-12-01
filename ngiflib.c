@@ -60,7 +60,7 @@ void GifDestroy(struct ngiflib_gif * g) {
  * fonction qui renvoie un octet du fichier .gif
  * on pourait optimiser en faisant 2 fonctions.
  */
-u8 GetByte(struct ngiflib_gif * g) {
+static u8 GetByte(struct ngiflib_gif * g) {
 	if(g->mode & NGIFLIB_MODE_FROM_MEM) {
 		u8 b = *((u8 *)g->input);
 		g->input = (u8 *)g->input + 1;
@@ -74,7 +74,7 @@ u8 GetByte(struct ngiflib_gif * g) {
  * Renvoie un mot de 16bits
  * N'est pas influencee par l'endianess du CPU !
  */
-u16 GetWord(struct ngiflib_gif * g) {
+static u16 GetWord(struct ngiflib_gif * g) {
 	u16 r = (u16)GetByte(g);
 	r |= ((u16)GetByte(g) << 8);
 	return r;
@@ -85,7 +85,7 @@ u16 GetWord(struct ngiflib_gif * g) {
  * et le nombre d'octet a lire.
  * Renvoie 0 si l'operation a reussi, -1 sinon.
  */
-int GetByteStr(struct ngiflib_gif * g, u8 * p, int n) {
+static int GetByteStr(struct ngiflib_gif * g, u8 * p, int n) {
 	if(!p) return -1;
 	if(g->mode & NGIFLIB_MODE_FROM_MEM) {
 		memcpy(p, g->input, n);
@@ -101,7 +101,7 @@ int GetByteStr(struct ngiflib_gif * g, u8 * p, int n) {
 /* void WritePixel(struct ngiflib_img * i, u8 v);
  * ecrit le pixel de valeur v dans le frame buffer
  */
-void WritePixel(struct ngiflib_img * i, u8 v) {
+static void WritePixel(struct ngiflib_img * i, u8 v) {
 	struct ngiflib_gif * p = i->parent;
 
 	if(v!=p->transparent_color || !p->transparent_flag) {
@@ -155,7 +155,7 @@ void WritePixel(struct ngiflib_img * i, u8 v) {
 /* void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n);
  * ecrit les pixels dans le frame buffer
  */
-void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n) {
+static void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n) {
 	u16 tocopy;	
 	struct ngiflib_gif * p = i->parent;
 
@@ -221,7 +221,7 @@ void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n) {
  * u16 GetGifWord(struct ngiflib_img * i);
  * Renvoie un code LZW (taille variable)
  */
-u16 GetGifWord(struct ngiflib_img * i) {
+static u16 GetGifWord(struct ngiflib_img * i) {
 	u16 r;
 	int bits_ok, bits_todo;
 	
@@ -255,7 +255,7 @@ u16 GetGifWord(struct ngiflib_img * i) {
 }
 
 /* ------------------------------------------------ */
-void FillGifBackGround(struct ngiflib_gif * g) {
+static void FillGifBackGround(struct ngiflib_gif * g) {
 	long n = (long)g->width*g->height;
 	u32 bg_truecolor;
 	if((g->frbuff==NULL)||(g->palette==NULL)) return;
@@ -280,7 +280,7 @@ int CheckGif(u8 * b) {
 }
 
 /* ------------------------------------------------ */
-int DecodeGifImg(struct ngiflib_img * i) {
+static int DecodeGifImg(struct ngiflib_img * i) {
 	long npix;
 	int stackp;
 	u16 clr;

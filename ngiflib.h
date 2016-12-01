@@ -115,14 +115,8 @@ void GifDestroy(struct ngiflib_gif * g);
 /* Fonction de debug */
 void fprintf_ngiflib_gif(FILE * f, struct ngiflib_gif * g);
 
-u8 GetByte(struct ngiflib_gif * g);
-u16 GetWord(struct ngiflib_gif * g);
-int GetByteStr(struct ngiflib_gif * g, u8 * p, int n);
-void WritePixel(struct ngiflib_img * i, u8 v);
-u16 GetGifWord(struct ngiflib_img * i);
-void FillGifBackGround(struct ngiflib_gif * g);
 int CheckGif(u8 * b);
-int DecodeGifImg(struct ngiflib_img * i);
+
 /* ------------------------------------------------ 
  * int LoadGif(struct ngiflib_gif *);
  * s'assurer que nimg=0 au depart !
