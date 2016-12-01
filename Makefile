@@ -1,5 +1,6 @@
 CC?=gcc
 CFLAGS?=-O -Wall
+CFLAGS+=-Wextra
 CFLAGS+=-g
 #CFLAGS+=-DDEBUG
 CFLAGS+=$(shell pkg-config sdl --cflags)

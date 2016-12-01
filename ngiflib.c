@@ -94,7 +94,7 @@ int GetByteStr(struct ngiflib_gif * g, u8 * p, int n) {
 	} else {
 		size_t read;
 		read = fread(p, 1, n, (FILE *)g->input);
-		return (read == n) ? 0 : -1;
+		return ((int)read == n) ? 0 : -1;
 	}
 }
 
@@ -342,7 +342,7 @@ int DecodeGifImg(struct ngiflib_img * i) {
 
 	if(i->parent && i->parent->log) {
 		if(i->interlaced) fprintf(i->parent->log, "interlaced ");
-		fprintf(i->parent->log, "img pos(%d,%d) size %dx%d palbits=%d imgbits=%d ncolors=%d\n",
+		fprintf(i->parent->log, "img pos(%hu,%hu) size %hux%hu palbits=%hhu imgbits=%hhu ncolors=%hu\n",
 	       i->posX, i->posY, i->width, i->height, i->localpalbits, i->imgbits, i->ncolors);
 	}
 
@@ -373,7 +373,7 @@ int DecodeGifImg(struct ngiflib_img * i) {
 			return 1;
 		}	
 		if(act_code==clr) {
-			if(i->parent && i->parent->log) fprintf(i->parent->log, "Code clear (free=%d)\n", free);
+			if(i->parent && i->parent->log) fprintf(i->parent->log, "Code clear (free=%hu)\n", free);
 			// clear
 			free = freesav;
 			i->nbbit = nbbitsav;
@@ -466,7 +466,7 @@ int LoadGif(struct ngiflib_gif * g) {
 		g->backgroundindex = GetByte(g);
 		g->transparent_flag = 0;
 
-		if(g->log) fprintf(g->log, "%dx%d %dbits %d couleurs  bg=%d\n",
+		if(g->log) fprintf(g->log, "%hux%hu %hhubits %hu couleurs  bg=%hhu\n",
 		                   g->width, g->height, g->imgbits, g->ncolors, g->backgroundindex);
 
 		g->pixaspectratio = GetByte(g);	// pixel aspect ratio (0 : unspecified)
@@ -506,7 +506,7 @@ int LoadGif(struct ngiflib_gif * g) {
 
 				GetByteStr(g, ext, size);
 
-				if(g->log) fprintf(g->log, "extension (id=0x%02x) index %d, size = %dbytes\n",id,blockindex,size);
+				if(g->log) fprintf(g->log, "extension (id=0x%02hhx) index %d, size = %hhubytes\n",id,blockindex,size);
 
 				switch(id) {
 				case 0xF9:	//Graphic Control Extension
@@ -515,7 +515,7 @@ int LoadGif(struct ngiflib_gif * g) {
 					g->userinputflag = (ext[0] >> 1) & 1;
 					g->delay_time = ext[1] | (ext[2]<<8);
 					g->transparent_color = ext[3];
-					if(g->log) fprintf(g->log, "disp_method=%d delay_time=%d (transp=%d)transparent_color=0x%02X\n",
+					if(g->log) fprintf(g->log, "disp_method=%hhu delay_time=%hu (transp=%hhu)transparent_color=0x%02hhX\n",
 					       g->disp_method, g->delay_time, g->transparent_flag, g->transparent_color);
 					if(g->transparent_flag) FillGifBackGround(g);
 					break;
