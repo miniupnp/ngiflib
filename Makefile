@@ -43,7 +43,7 @@ check:	gif2tga
 	@err=0 ;\
 	for tga in tmp/*.tga; do \
 		ref="ref/$$(basename $$tga).gz" ;\
-		zcmp -b $$tga $$ref || { echo "ERROR on $$tga" ; err=1; } ;\
+		zcat $$ref | cmp -b $$tga || { echo "ERROR on $$tga" ; err=1; } ;\
 	done ;\
 	exit $$err
 		
