@@ -429,12 +429,12 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 				ab_prfx[free] = old_code;
 				ab_suffx[free] = (u8)act_code;
 				free++;
+				if((free > i->max) && (i->nbbit < 12)) {
+					i->nbbit++;	/* 1 bit de plus pour les codes LZW */
+					i->max += i->max + 1;
+				}
 			}
 			old_code = read_byt;
-			if((free>i->max)&&(i->nbbit<12)) {
-				i->nbbit++;	// 1 bit de plus pour les codes LZW
-				i->max = (1 << i->nbbit) - 1;
-			}
 		}
 			
 	}
