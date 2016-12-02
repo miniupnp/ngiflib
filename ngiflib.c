@@ -405,7 +405,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			act_code = GetGifWord(i);
 			casspecial = (u8)act_code;
 			old_code = act_code;
-			WritePixel(i, (u8)act_code); npix--;
+			WritePixel(i, casspecial); npix--;
 		} else {
 			read_byt = act_code;
 			if(act_code >= free) {	/* code pas encore dans alphabet */
