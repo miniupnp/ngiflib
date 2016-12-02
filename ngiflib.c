@@ -224,11 +224,11 @@ static void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n) {
 static u16 GetGifWord(struct ngiflib_img * i) {
 	u16 r;
 	int bits_todo;
-	u8 newbyte;
+	u16 newbyte;
 
 	bits_todo = (int)i->nbbit - (int)i->restbits;
 	if( bits_todo <= 0) {	/* i->nbbit <= i->restbits */
-		r = (u16)i->lbyte;
+		r = i->lbyte;
 		i->restbits -= i->nbbit;
 		i->lbyte >>= i->nbbit;
 	} else if( bits_todo > 8 ) {	/* i->nbbit > i-> restbits + 8 */
@@ -256,8 +256,8 @@ static u16 GetGifWord(struct ngiflib_img * i) {
 			i->restbyte--;
 		}
 		newbyte = *i->srcbyte++;
-		r |= (u16)newbyte << 8;
-		r = (r << i->restbits) | (u16)i->lbyte;
+		r |= newbyte << 8;
+		r = (r << i->restbits) | i->lbyte;
 		i->restbits = 16 - bits_todo;
 		i->lbyte = newbyte >> (bits_todo - 8);
 	} else /*if( bits_todo > 0 )*/ { /* i->nbbit > i->restbits */
@@ -271,7 +271,7 @@ static u16 GetGifWord(struct ngiflib_img * i) {
 		}
 		newbyte = *i->srcbyte++;
 		i->restbyte--;
-		r = ((u16)newbyte << i->restbits) | (u16)i->lbyte;
+		r = (newbyte << i->restbits) | i->lbyte;
 		i->restbits = 8 - bits_todo;
 		i->lbyte = newbyte >> bits_todo;
 	}
