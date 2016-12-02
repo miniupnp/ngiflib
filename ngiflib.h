@@ -92,7 +92,10 @@ struct ngiflib_gif {
 	void * input;	// used by GetByte
 	u32 * frbuff;	// frame buffer
 	FILE * log;		// to output log
-	u32 frbuff_offset;	/* current offset in frame buffer */
+	u8 * frbuff_p8;	/* current offset in frame buffer */
+#ifndef NGIFLIB_INDEXED_ONLY
+	u32 * frbuff_p32;	/* current offset in frame buffer */
+#endif /* NGIFLIB_INDEXED_ONLY */
 	int nimg;
 	u16 ncolors;
 	u16 width;

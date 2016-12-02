@@ -108,10 +108,10 @@ static void WritePixel(struct ngiflib_img * i, u8 v) {
 #ifndef NGIFLIB_INDEXED_ONLY
 		if(p->mode & NGIFLIB_MODE_INDEXED) {
 #endif /* NGIFLIB_INDEXED_ONLY */
-			((u8 *)p->frbuff)[p->frbuff_offset] = v;
+			*p->frbuff_p8 = v;
 #ifndef NGIFLIB_INDEXED_ONLY
 		} else
-			p->frbuff[p->frbuff_offset] =
+			*p->frbuff_p32 =
 			   GifIndexToTrueColor(i->palette, v);
 #endif /* NGIFLIB_INDEXED_ONLY */
 	}
@@ -146,9 +146,15 @@ static void WritePixel(struct ngiflib_img * i, u8 v) {
 			i->curY += 2;
 			break;
 		}
-		p->frbuff_offset = (u32)i->curY*p->width + i->posX;
+		p->frbuff_p8 = (u8 *)p->frbuff + (u32)i->curY*p->width + i->posX;
+#ifndef NGIFLIB_INDEXED_ONLY
+		p->frbuff_p32 = p->frbuff + (u32)i->curY*p->width + i->posX;
+#endif /* NGIFLIB_INDEXED_ONLY */
 	} else {
-		p->frbuff_offset++;
+		p->frbuff_p8++;
+#ifndef NGIFLIB_INDEXED_ONLY
+		p->frbuff_p32++;
+#endif /* NGIFLIB_INDEXED_ONLY */
 	}
 }
 
@@ -165,14 +171,14 @@ static void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n) {
 #ifndef NGIFLIB_INDEXED_ONLY
 			if(p->mode & NGIFLIB_MODE_INDEXED) {
 #endif /* NGIFLIB_INDEXED_ONLY */
-				ngiflib_memcpy((u8 *)p->frbuff + p->frbuff_offset, pixels, tocopy);
+				ngiflib_memcpy(p->frbuff_p8, pixels, tocopy);
 				pixels += tocopy;
-				p->frbuff_offset += tocopy;
+				p->frbuff_p8 += tocopy;
 #ifndef NGIFLIB_INDEXED_ONLY
 			} else {
 				int j;
 				for(j = (int)tocopy; j > 0; j--) {
-					p->frbuff[p->frbuff_offset++] =
+					*(p->frbuff_p32++) =
 					   GifIndexToTrueColor(i->palette, *pixels++);
 				}
 			}
@@ -212,7 +218,10 @@ static void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n) {
 				i->curY += 2;
 				break;
 			}
-			p->frbuff_offset = (u32)i->curY*p->width + i->posX;
+			p->frbuff_p8 = (u8 *)p->frbuff + (u32)i->curY*p->width + i->posX;
+#ifndef NGIFLIB_INDEXED_ONLY
+			p->frbuff_p32 = p->frbuff + (u32)i->curY*p->width + i->posX;
+#endif /* NGIFLIB_INDEXED_ONLY */
 		}
 	}
 }
@@ -332,7 +341,10 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 
 	i->Xtogo = i->width;
 	i->curY = i->posY;
-	i->parent->frbuff_offset = (u32)i->posY*i->parent->width + i->posX;
+	i->parent->frbuff_p8 = (u8 *)i->parent->frbuff + (u32)i->posY*i->parent->width + i->posX;
+#ifndef NGIFLIB_INDEXED_ONLY
+	i->parent->frbuff_p32 = i->parent->frbuff + (u32)i->posY*i->parent->width + i->posX;
+#endif /* NGIFLIB_INDEXED_ONLY */
 
 	npix = (long)i->width * i->height;
 	flags = GetByte(i->parent);
