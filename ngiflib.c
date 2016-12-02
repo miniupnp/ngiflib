@@ -306,7 +306,8 @@ int CheckGif(u8 * b) {
 /* ------------------------------------------------ */
 static int DecodeGifImg(struct ngiflib_img * i) {
 	long npix;
-	int stackp;
+	u8 * stackp;
+	u8 * stack_top;
 	u16 clr;
 	u16 eof;
 	u16 free;
@@ -380,7 +381,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	i->nbbit = nbbitsav;
 	maxsav = (1 << nbbitsav) - 1;
 	i->max = maxsav;
-	stackp = 4096;
+	stackp = stack_top = ab_stack + 4096;
 	
 	i->restbits = 0;	// initialise le "buffer" de lecture
 	i->restbyte = 0;	// des codes LZW
@@ -407,24 +408,24 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			WritePixel(i, (u8)act_code); npix--;
 		} else {
 			read_byt = act_code;
-			if(act_code>=free) {	// code pas encore dans alphabet
+			if(act_code >= free) {	/* code pas encore dans alphabet */
 //				printf("Code pas dans alphabet : %d>=%d push %d\n", act_code, free, casspecial);
-				ab_stack[--stackp] = (u8)casspecial; // dernier debut de chaine !
+				*(--stackp) = casspecial; /* dernier debut de chaine ! */
 				act_code = old_code;
 			}
 //			printf("actcode=%d\n", act_code);
-			while(act_code>clr) { // code non concret
+			while(act_code > clr) { /* code non concret */
 				// fillstackloop empile les suffixes !
-				ab_stack[--stackp] = ab_suffx[act_code];
+				*(--stackp) = ab_suffx[act_code];
 				act_code = ab_prfx[act_code];	// prefixe
 			}
 			// act_code est concret
-			casspecial = (u8)act_code;	// dernier debut de chaine !
-			ab_stack[--stackp] = casspecial;	/* push on stack */
-			WritePixels(i, ab_stack + stackp, 4096 - stackp);	/* unstack all pixels at once */
-			stackp = 4096;
+			casspecial = (u8)act_code;	/* dernier debut de chaine ! */
+			*(--stackp) = casspecial;	/* push on stack */
+			WritePixels(i, stackp, stack_top - stackp);	/* unstack all pixels at once */
+			stackp = stack_top;
 //			putchar('\n');
-			if(free<4096) { // la taille du dico est 4096 max !
+			if(free < 4096) { // la taille du dico est 4096 max !
 				ab_prfx[free] = old_code;
 				ab_suffx[free] = (u8)act_code;
 				free++;
