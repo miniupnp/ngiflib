@@ -227,7 +227,11 @@ static u16 GetGifWord(struct ngiflib_img * i) {
 	u8 newbyte;
 
 	bits_todo = (int)i->nbbit - (int)i->restbits;
-	if( bits_todo > 8 ) {	/* i->nbbit > i-> restbits + 8 */
+	if( bits_todo <= 0) {	/* i->nbbit <= i->restbits */
+		r = (u16)i->lbyte;
+		i->restbits -= i->nbbit;
+		i->lbyte >>= i->nbbit;
+	} else if( bits_todo > 8 ) {	/* i->nbbit > i-> restbits + 8 */
 		if(i->restbyte >= 2) {
 			i->restbyte -= 2;
 			r = *i->srcbyte++;
@@ -252,7 +256,7 @@ static u16 GetGifWord(struct ngiflib_img * i) {
 		r = (r << i->restbits) | (u16)i->lbyte;
 		i->restbits = 16 - bits_todo;
 		i->lbyte = newbyte >> (bits_todo - 8);
-	} else if( bits_todo > 0 ) { /* i->nbbit > i->restbits */
+	} else /*if( bits_todo > 0 )*/ { /* i->nbbit > i->restbits */
 		if(i->restbyte == 0) {
 			i->restbyte = GetByte(i->parent);
 			if(i->parent->log) fprintf(i->parent->log, "i->restbyte = %02X\n", i->restbyte);
@@ -264,10 +268,6 @@ static u16 GetGifWord(struct ngiflib_img * i) {
 		r = ((u16)newbyte << i->restbits) | (u16)i->lbyte;
 		i->restbits = 8 - bits_todo;
 		i->lbyte = newbyte >> bits_todo;
-	} else {	/* i->nbbit <= i->restbits */
-		r = (u16)i->lbyte;
-		i->restbits -= i->nbbit;
-		i->lbyte >>= i->nbbit;
 	}
 	return (r & i->max);	/* applique le bon masque pour eliminer les bits en trop */
 }
