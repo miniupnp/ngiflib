@@ -238,14 +238,18 @@ static u16 GetGifWord(struct ngiflib_img * i) {
 		} else {
 			if(i->restbyte == 0) {
 				i->restbyte = GetByte(i->parent);
+#ifdef DEBUG
 				if(i->parent->log) fprintf(i->parent->log, "i->restbyte = %02X\n", i->restbyte);
+#endif /* DEBUG */
 				GetByteStr(i->parent, i->parent->byte_buffer, i->restbyte);
 				i->srcbyte = i->parent->byte_buffer;
 			}
 			r = *i->srcbyte++;
 			if(--i->restbyte == 0) {
 				i->restbyte = GetByte(i->parent);
+#ifdef DEBUG
 				if(i->parent->log) fprintf(i->parent->log, "i->restbyte = %02X\n", i->restbyte);
+#endif /* DEBUG */
 				GetByteStr(i->parent, i->parent->byte_buffer, i->restbyte);
 				i->srcbyte = i->parent->byte_buffer;
 			}
@@ -259,7 +263,9 @@ static u16 GetGifWord(struct ngiflib_img * i) {
 	} else /*if( bits_todo > 0 )*/ { /* i->nbbit > i->restbits */
 		if(i->restbyte == 0) {
 			i->restbyte = GetByte(i->parent);
+#ifdef DEBUG
 			if(i->parent->log) fprintf(i->parent->log, "i->restbyte = %02X\n", i->restbyte);
+#endif /* DEBUG */
 			GetByteStr(i->parent, i->parent->byte_buffer, i->restbyte);
 			i->srcbyte = i->parent->byte_buffer;
 		}
