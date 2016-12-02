@@ -224,13 +224,38 @@ static void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n) {
 static u16 GetGifWord(struct ngiflib_img * i) {
 	u16 r;
 	int bits_ok, bits_todo;
-	
-	r = (u16)i->lbyte;
+	u8 newbyte;
+
 	bits_ok = (int)i->restbits;
 	bits_todo = (int)i->nbbit - bits_ok;
-	if( bits_todo > 0 ) { /* i->nbbit > i->restbits */
-		u8 newbyte;
-		if(i->restbyte==0) {
+	if( bits_todo > 8 ) {
+		if(i->restbyte >= 2) {
+			i->restbyte -= 2;
+			r = *i->srcbyte++;
+			newbyte = *i->srcbyte++;
+		} else {
+			if(i->restbyte == 0) {
+				i->restbyte = GetByte(i->parent);
+				if(i->parent->log) fprintf(i->parent->log, "i->restbyte = %02X\n", i->restbyte);
+				GetByteStr(i->parent, i->parent->byte_buffer, i->restbyte);
+				i->srcbyte = i->parent->byte_buffer;
+			}
+			r = *i->srcbyte++;
+			if(--i->restbyte == 0) {
+				i->restbyte = GetByte(i->parent);
+				if(i->parent->log) fprintf(i->parent->log, "i->restbyte = %02X\n", i->restbyte);
+				GetByteStr(i->parent, i->parent->byte_buffer, i->restbyte);
+				i->srcbyte = i->parent->byte_buffer;
+			}
+			i->restbyte--;
+			newbyte = *i->srcbyte++;
+		}
+		r |= (u16)newbyte << 8;
+		r = (r << bits_ok) | (u16)i->lbyte;
+		i->restbits = 16 - bits_todo;
+		i->lbyte = newbyte >> (bits_todo - 8);
+	} else if( bits_todo > 0 ) { /* i->nbbit > i->restbits */
+		if(i->restbyte == 0) {
 			i->restbyte = GetByte(i->parent);
 			if(i->parent->log) fprintf(i->parent->log, "i->restbyte = %02X\n", i->restbyte);
 			GetByteStr(i->parent, i->parent->byte_buffer, i->restbyte);
@@ -238,23 +263,11 @@ static u16 GetGifWord(struct ngiflib_img * i) {
 		}
 		newbyte = *i->srcbyte++;
 		i->restbyte--;
-		r |= ((u16)newbyte << bits_ok);
-		if(bits_todo > 8) {
-			bits_todo -= 8;
-			bits_ok += 8;
-			if(i->restbyte==0) {
-				i->restbyte = GetByte(i->parent);
-				if(i->parent->log) fprintf(i->parent->log, "i->restbyte = %02X\n", i->restbyte);
-				GetByteStr(i->parent, i->parent->byte_buffer, i->restbyte);
-				i->srcbyte = i->parent->byte_buffer;
-			}
-			newbyte = *i->srcbyte++;
-			i->restbyte--;
-			r |= ((u16)newbyte << bits_ok);
-		}
+		r = ((u16)newbyte << bits_ok) | (u16)i->lbyte;
 		i->restbits = 8 - bits_todo;
 		i->lbyte = newbyte >> bits_todo;
 	} else {
+		r = (u16)i->lbyte;
 		i->restbits -= i->nbbit;
 		i->lbyte >>= i->nbbit;
 	}
