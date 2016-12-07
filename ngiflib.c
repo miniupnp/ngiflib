@@ -101,59 +101,59 @@ static int GetByteStr(struct ngiflib_gif * g, u8 * p, int n) {
 /* void WritePixel(struct ngiflib_img * i, u8 v);
  * ecrit le pixel de valeur v dans le frame buffer
  */
-static void WritePixel(struct ngiflib_img * i, u8 v) {
+static void WritePixel(struct ngiflib_img * i, struct ngiflib_decode_context * context, u8 v) {
 	struct ngiflib_gif * p = i->parent;
 
 	if(v!=p->transparent_color || !p->transparent_flag) {
 #ifndef NGIFLIB_INDEXED_ONLY
 		if(p->mode & NGIFLIB_MODE_INDEXED) {
 #endif /* NGIFLIB_INDEXED_ONLY */
-			*p->frbuff_p8 = v;
+			*context->frbuff_p8 = v;
 #ifndef NGIFLIB_INDEXED_ONLY
 		} else
-			*p->frbuff_p32 =
+			*context->frbuff_p32 =
 			   GifIndexToTrueColor(i->palette, v);
 #endif /* NGIFLIB_INDEXED_ONLY */
 	}
-	if(--(i->Xtogo) <= 0) {
-		i->Xtogo = i->width;
-		switch(i->pass) {
+	if(--(context->Xtogo) <= 0) {
+		context->Xtogo = i->width;
+		switch(context->pass) {
 		case 0:
-			i->curY++;
+			context->curY++;
 			break;
 		case 1:	/* 1st pass : every eighth row starting from 0 */
-			i->curY += 8;
-			if(i->curY >= p->height) {
-				i->pass++;
-				i->curY = i->posY + 4;
+			context->curY += 8;
+			if(context->curY >= p->height) {
+				context->pass++;
+				context->curY = i->posY + 4;
 			}
 			break;
 		case 2:	/* 2nd pass : every eighth row starting from 4 */
-			i->curY += 8;
-			if(i->curY >= p->height) {
-				i->pass++;
-				i->curY = i->posY + 2;
+			context->curY += 8;
+			if(context->curY >= p->height) {
+				context->pass++;
+				context->curY = i->posY + 2;
 			}
 			break;
 		case 3:	/* 3rd pass : every fourth row starting from 2 */
-			i->curY += 4;
-			if(i->curY >= p->height) {
-				i->pass++;
-				i->curY = i->posY + 1;
+			context->curY += 4;
+			if(context->curY >= p->height) {
+				context->pass++;
+				context->curY = i->posY + 1;
 			}
 			break;
 		case 4:	/* 4th pass : every odd row */
-			i->curY += 2;
+			context->curY += 2;
 			break;
 		}
-		p->frbuff_p8 = (u8 *)p->frbuff + (u32)i->curY*p->width + i->posX;
+		context->frbuff_p8 = (u8 *)p->frbuff + (u32)context->curY*p->width + i->posX;
 #ifndef NGIFLIB_INDEXED_ONLY
-		p->frbuff_p32 = p->frbuff + (u32)i->curY*p->width + i->posX;
+		context->frbuff_p32 = p->frbuff + (u32)context->curY*p->width + i->posX;
 #endif /* NGIFLIB_INDEXED_ONLY */
 	} else {
-		p->frbuff_p8++;
+		context->frbuff_p8++;
 #ifndef NGIFLIB_INDEXED_ONLY
-		p->frbuff_p32++;
+		context->frbuff_p32++;
 #endif /* NGIFLIB_INDEXED_ONLY */
 	}
 }
@@ -161,24 +161,24 @@ static void WritePixel(struct ngiflib_img * i, u8 v) {
 /* void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n);
  * ecrit les pixels dans le frame buffer
  */
-static void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n) {
+static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * context, const u8 * pixels, u16 n) {
 	u16 tocopy;	
 	struct ngiflib_gif * p = i->parent;
 
 	for(; n > 0; n -= tocopy) {
-		tocopy = (i->Xtogo < n) ? i->Xtogo : n;
+		tocopy = (context->Xtogo < n) ? context->Xtogo : n;
 		if(!p->transparent_flag) {
 #ifndef NGIFLIB_INDEXED_ONLY
 			if(p->mode & NGIFLIB_MODE_INDEXED) {
 #endif /* NGIFLIB_INDEXED_ONLY */
-				ngiflib_memcpy(p->frbuff_p8, pixels, tocopy);
+				ngiflib_memcpy(context->frbuff_p8, pixels, tocopy);
 				pixels += tocopy;
-				p->frbuff_p8 += tocopy;
+				context->frbuff_p8 += tocopy;
 #ifndef NGIFLIB_INDEXED_ONLY
 			} else {
 				int j;
 				for(j = (int)tocopy; j > 0; j--) {
-					*(p->frbuff_p32++) =
+					*(context->frbuff_p32++) =
 					   GifIndexToTrueColor(i->palette, *pixels++);
 				}
 			}
@@ -186,41 +186,41 @@ static void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n) {
 		} else {
 			/* TODO */
 		}
-		i->Xtogo -= tocopy;
-		if(i->Xtogo == 0) {
-			i->Xtogo = i->width;
-			switch(i->pass) {
+		context->Xtogo -= tocopy;
+		if(context->Xtogo == 0) {
+			context->Xtogo = i->width;
+			switch(context->pass) {
 			case 0:
-				i->curY++;
+				context->curY++;
 				break;
 			case 1:	/* 1st pass : every eighth row starting from 0 */
-				i->curY += 8;
-				if(i->curY >= p->height) {
-					i->pass++;
-					i->curY = i->posY + 4;
+				context->curY += 8;
+				if(context->curY >= p->height) {
+					context->pass++;
+					context->curY = i->posY + 4;
 				}
 				break;
 			case 2:	/* 2nd pass : every eighth row starting from 4 */
-				i->curY += 8;
-				if(i->curY >= p->height) {
-					i->pass++;
-					i->curY = i->posY + 2;
+				context->curY += 8;
+				if(context->curY >= p->height) {
+					context->pass++;
+					context->curY = i->posY + 2;
 				}
 				break;
 			case 3:	/* 3rd pass : every fourth row starting from 2 */
-				i->curY += 4;
-				if(i->curY >= p->height) {
-					i->pass++;
-					i->curY = i->posY + 1;
+				context->curY += 4;
+				if(context->curY >= p->height) {
+					context->pass++;
+					context->curY = i->posY + 1;
 				}
 				break;
 			case 4:	/* 4th pass : every odd row */
-				i->curY += 2;
+				context->curY += 2;
 				break;
 			}
-			p->frbuff_p8 = (u8 *)p->frbuff + (u32)i->curY*p->width + i->posX;
+			context->frbuff_p8 = (u8 *)p->frbuff + (u32)context->curY*p->width + i->posX;
 #ifndef NGIFLIB_INDEXED_ONLY
-			p->frbuff_p32 = p->frbuff + (u32)i->curY*p->width + i->posX;
+			context->frbuff_p32 = p->frbuff + (u32)context->curY*p->width + i->posX;
 #endif /* NGIFLIB_INDEXED_ONLY */
 		}
 	}
@@ -230,61 +230,61 @@ static void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n) {
  * u16 GetGifWord(struct ngiflib_img * i);
  * Renvoie un code LZW (taille variable)
  */
-static u16 GetGifWord(struct ngiflib_img * i) {
+static u16 GetGifWord(struct ngiflib_img * i, struct ngiflib_decode_context * context) {
 	u16 r;
 	int bits_todo;
 	u16 newbyte;
 
-	bits_todo = (int)i->nbbit - (int)i->restbits;
-	if( bits_todo <= 0) {	/* i->nbbit <= i->restbits */
-		r = i->lbyte;
-		i->restbits -= i->nbbit;
-		i->lbyte >>= i->nbbit;
-	} else if( bits_todo > 8 ) {	/* i->nbbit > i-> restbits + 8 */
-		if(i->restbyte >= 2) {
-			i->restbyte -= 2;
-			r = *i->srcbyte++;
+	bits_todo = (int)context->nbbit - (int)context->restbits;
+	if( bits_todo <= 0) {	/* nbbit <= restbits */
+		r = context->lbyte;
+		context->restbits -= context->nbbit;
+		context->lbyte >>= context->nbbit;
+	} else if( bits_todo > 8 ) {	/* nbbit > restbits + 8 */
+		if(context->restbyte >= 2) {
+			context->restbyte -= 2;
+			r = *context->srcbyte++;
 		} else {
-			if(i->restbyte == 0) {
-				i->restbyte = GetByte(i->parent);
+			if(context->restbyte == 0) {
+				context->restbyte = GetByte(i->parent);
 #ifdef DEBUG
-				if(i->parent->log) fprintf(i->parent->log, "i->restbyte = %02X\n", i->restbyte);
+				if(i->parent->log) fprintf(i->parent->log, "restbyte = %02X\n", context->restbyte);
 #endif /* DEBUG */
-				GetByteStr(i->parent, i->parent->byte_buffer, i->restbyte);
-				i->srcbyte = i->parent->byte_buffer;
+				GetByteStr(i->parent, context->byte_buffer, context->restbyte);
+				context->srcbyte = context->byte_buffer;
 			}
-			r = *i->srcbyte++;
-			if(--i->restbyte == 0) {
-				i->restbyte = GetByte(i->parent);
+			r = *context->srcbyte++;
+			if(--context->restbyte == 0) {
+				context->restbyte = GetByte(i->parent);
 #ifdef DEBUG
-				if(i->parent->log) fprintf(i->parent->log, "i->restbyte = %02X\n", i->restbyte);
+				if(i->parent->log) fprintf(i->parent->log, "restbyte = %02X\n", context->restbyte);
 #endif /* DEBUG */
-				GetByteStr(i->parent, i->parent->byte_buffer, i->restbyte);
-				i->srcbyte = i->parent->byte_buffer;
+				GetByteStr(i->parent, context->byte_buffer, context->restbyte);
+				context->srcbyte = context->byte_buffer;
 			}
-			i->restbyte--;
+			context->restbyte--;
 		}
-		newbyte = *i->srcbyte++;
+		newbyte = *context->srcbyte++;
 		r |= newbyte << 8;
-		r = (r << i->restbits) | i->lbyte;
-		i->restbits = 16 - bits_todo;
-		i->lbyte = newbyte >> (bits_todo - 8);
-	} else /*if( bits_todo > 0 )*/ { /* i->nbbit > i->restbits */
-		if(i->restbyte == 0) {
-			i->restbyte = GetByte(i->parent);
+		r = (r << context->restbits) | context->lbyte;
+		context->restbits = 16 - bits_todo;
+		context->lbyte = newbyte >> (bits_todo - 8);
+	} else /*if( bits_todo > 0 )*/ { /* nbbit > restbits */
+		if(context->restbyte == 0) {
+			context->restbyte = GetByte(i->parent);
 #ifdef DEBUG
-			if(i->parent->log) fprintf(i->parent->log, "i->restbyte = %02X\n", i->restbyte);
+			if(i->parent->log) fprintf(i->parent->log, "restbyte = %02X\n", context->restbyte);
 #endif /* DEBUG */
-			GetByteStr(i->parent, i->parent->byte_buffer, i->restbyte);
-			i->srcbyte = i->parent->byte_buffer;
+			GetByteStr(i->parent, context->byte_buffer, context->restbyte);
+			context->srcbyte = context->byte_buffer;
 		}
-		newbyte = *i->srcbyte++;
-		i->restbyte--;
-		r = (newbyte << i->restbits) | i->lbyte;
-		i->restbits = 8 - bits_todo;
-		i->lbyte = newbyte >> bits_todo;
+		newbyte = *context->srcbyte++;
+		context->restbyte--;
+		r = (newbyte << context->restbits) | context->lbyte;
+		context->restbits = 8 - bits_todo;
+		context->lbyte = newbyte >> bits_todo;
 	}
-	return (r & i->max);	/* applique le bon masque pour eliminer les bits en trop */
+	return (r & context->max);	/* applique le bon masque pour eliminer les bits en trop */
 }
 
 /* ------------------------------------------------ */
@@ -314,6 +314,7 @@ int CheckGif(u8 * b) {
 
 /* ------------------------------------------------ */
 static int DecodeGifImg(struct ngiflib_img * i) {
+	struct ngiflib_decode_context context;
 	long npix;
 	u8 * stackp;
 	u8 * stack_top;
@@ -339,17 +340,17 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	i->width = GetWord(i->parent);	/* SizeX   */
 	i->height = GetWord(i->parent);	/* SizeY   */
 
-	i->Xtogo = i->width;
-	i->curY = i->posY;
-	i->parent->frbuff_p8 = (u8 *)i->parent->frbuff + (u32)i->posY*i->parent->width + i->posX;
+	context.Xtogo = i->width;
+	context.curY = i->posY;
+	context.frbuff_p8 = (u8 *)i->parent->frbuff + (u32)i->posY*i->parent->width + i->posX;
 #ifndef NGIFLIB_INDEXED_ONLY
-	i->parent->frbuff_p32 = i->parent->frbuff + (u32)i->posY*i->parent->width + i->posX;
+	context.frbuff_p32 = i->parent->frbuff + (u32)i->posY*i->parent->width + i->posX;
 #endif /* NGIFLIB_INDEXED_ONLY */
 
 	npix = (long)i->width * i->height;
 	flags = GetByte(i->parent);
 	i->interlaced = (flags & 64) >> 6;
-	i->pass = i->interlaced ? 1 : 0;
+	context.pass = i->interlaced ? 1 : 0;
 	i->sort_flag = (flags & 32) >> 5;	/* is local palette sorted by color frequency ? */
 	i->localpalbits = (flags & 7) + 1;
 	if(flags&128) { /* palette locale */
@@ -384,16 +385,16 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	free = clr + 2;
 	freesav = free;
 	nbbitsav = i->imgbits + 1;
-	i->nbbit = nbbitsav;
+	context.nbbit = nbbitsav;
 	maxsav = (1 << nbbitsav) - 1;
-	i->max = maxsav;
+	context.max = maxsav;
 	stackp = stack_top = ab_stack + 4096;
 	
-	i->restbits = 0;	/* initialise le "buffer" de lecture */
-	i->restbyte = 0;	/* des codes LZW */
-	i->lbyte = 0;
+	context.restbits = 0;	/* initialise le "buffer" de lecture */
+	context.restbyte = 0;	/* des codes LZW */
+	context.lbyte = 0;
 	for(;;) {
-		act_code = GetGifWord(i);
+		act_code = GetGifWord(i, &context);
 		if(act_code==eof) {
 			if(i->parent && i->parent->log) fprintf(i->parent->log, "End of image code\n");
 			return 0;
@@ -406,12 +407,12 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			if(i->parent && i->parent->log) fprintf(i->parent->log, "Code clear (free=%hu)\n", free);
 			/* clear */
 			free = freesav;
-			i->nbbit = nbbitsav;
-			i->max = maxsav;
-			act_code = GetGifWord(i);
+			context.nbbit = nbbitsav;
+			context.max = maxsav;
+			act_code = GetGifWord(i, &context);
 			casspecial = (u8)act_code;
 			old_code = act_code;
-			WritePixel(i, casspecial); npix--;
+			WritePixel(i, &context, casspecial); npix--;
 		} else {
 			read_byt = act_code;
 			if(act_code >= free) {	/* code pas encore dans alphabet */
@@ -428,16 +429,16 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			/* act_code est concret */
 			casspecial = (u8)act_code;	/* dernier debut de chaine ! */
 			*(--stackp) = casspecial;	/* push on stack */
-			WritePixels(i, stackp, stack_top - stackp);	/* unstack all pixels at once */
+			WritePixels(i, &context, stackp, stack_top - stackp);	/* unstack all pixels at once */
 			stackp = stack_top;
 /*			putchar('\n'); */
 			if(free < 4096) { /* la taille du dico est 4096 max ! */
 				ab_prfx[free] = old_code;
 				ab_suffx[free] = (u8)act_code;
 				free++;
-				if((free > i->max) && (i->nbbit < 12)) {
-					i->nbbit++;	/* 1 bit de plus pour les codes LZW */
-					i->max += i->max + 1;
+				if((free > context.max) && (context.nbbit < 12)) {
+					context.nbbit++;	/* 1 bit de plus pour les codes LZW */
+					context.max += context.max + 1;
 				}
 			}
 			old_code = read_byt;

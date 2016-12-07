@@ -40,25 +40,33 @@ struct ngiflib_img {
 	struct ngiflib_img * next;
 	struct ngiflib_gif * parent;
 	struct ngiflib_rgb * palette;
-	const u8 * srcbyte;
 	u16 ncolors;
 	u16 width;
 	u16 height;
 	u16 posX;
 	u16 posY;
+	u8 interlaced;
+	u8 sort_flag;		/* is local palette sorted by color frequency ? */
+	u8 localpalbits;	/* bits/pixel ! (de 1 a 8) */
+	u8 imgbits;	/* bits mini du code LZW (de 2 a 9 ?) */
+};
+
+/* utilises juste pour la decompression */
+struct ngiflib_decode_context {
+	u8 * frbuff_p8;	/* current offset in frame buffer */
+#ifndef NGIFLIB_INDEXED_ONLY
+	u32 * frbuff_p32;	/* current offset in frame buffer */
+#endif /* NGIFLIB_INDEXED_ONLY */
+	const u8 * srcbyte;
 	u16 Xtogo;
 	u16 curY;
-	u8 interlaced;
-	u8 pass;	/* current pass of interlaced image decoding */
-	u8 sort_flag;
-	u8 localpalbits;	/* bits/pixel ! (de 1 a 8) */
-	/* utilises juste pour la decompression */
-	u8 restbyte;
-	u8 nbbit;	/* bits courants du code LZW */
 	u16 lbyte;
 	u16 max;	/* maximum value = (1 << nbbit) - 1 */
+	u8 pass;	/* current pass of interlaced image decoding */
+	u8 restbyte;
+	u8 nbbit;	/* bits courants du code LZW */
 	u8 restbits;
-	u8 imgbits;	/* bits mini du code LZW (de 2 a 9 ?) */
+	u8 byte_buffer[256];	/* for get word */
 };
 
 void GifImgDestroy(struct ngiflib_img * i);
@@ -92,10 +100,6 @@ struct ngiflib_gif {
 	void * input;	/* used by GetByte */
 	u32 * frbuff;	/* frame buffer    */
 	FILE * log;		/* to output log   */
-	u8 * frbuff_p8;	/* current offset in frame buffer */
-#ifndef NGIFLIB_INDEXED_ONLY
-	u32 * frbuff_p32;	/* current offset in frame buffer */
-#endif /* NGIFLIB_INDEXED_ONLY */
 	int nimg;
 	u16 ncolors;
 	u16 width;
@@ -112,7 +116,6 @@ struct ngiflib_gif {
 	u8 sort_flag;
 	u8 mode; /* voir avant */
 	u8 signature[7];	/* 0 terminated  !=) */
-	u8 byte_buffer[256];	/* for get word */
 };
 
 void GifDestroy(struct ngiflib_gif * g);
