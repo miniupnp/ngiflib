@@ -6,7 +6,7 @@
 /* SDL_LoadGIF a le meme comportement que SDL_LoadBMP */
 SDL_Surface * SDL_LoadGIF(const char * file)
 {
-	// MODE WRAPPER A DEUX BALLES
+	/* MODE WRAPPER A DEUX BALLES */
 	SDL_Surface * surface;
 	struct ngiflib_gif * gif;
 	FILE *fgif;
@@ -19,7 +19,7 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 	gif = (struct ngiflib_gif *)ngiflib_malloc(sizeof(struct ngiflib_gif));
 	ngiflib_memset(gif, 0, sizeof(struct ngiflib_gif));
 	gif->input = (void *)fgif;
-	//gif->mode = NGIFLIB_MODE_FROM_FILE | NGIFLIB_MODE_TRUE_COLOR;
+	/*gif->mode = NGIFLIB_MODE_FROM_FILE | NGIFLIB_MODE_TRUE_COLOR; */
 	gif->mode = NGIFLIB_MODE_FROM_FILE | NGIFLIB_MODE_INDEXED;
 	err = LoadGif(gif);
 	fclose(fgif);

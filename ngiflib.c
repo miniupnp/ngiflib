@@ -334,10 +334,10 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 
 	if(!i) return -1;
 
-	i->posX = GetWord(i->parent);	// offsetX
-	i->posY = GetWord(i->parent);	// offsetY
-	i->width = GetWord(i->parent);	// SizeX
-	i->height = GetWord(i->parent);	// SizeY
+	i->posX = GetWord(i->parent);	/* offsetX */
+	i->posY = GetWord(i->parent);	/* offsetY */
+	i->width = GetWord(i->parent);	/* SizeX   */
+	i->height = GetWord(i->parent);	/* SizeY   */
 
 	i->Xtogo = i->width;
 	i->curY = i->posY;
@@ -350,9 +350,9 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	flags = GetByte(i->parent);
 	i->interlaced = (flags & 64) >> 6;
 	i->pass = i->interlaced ? 1 : 0;
-	i->sort_flag = (flags & 32) >> 5;	// is local palette sorted by color frequency ?
+	i->sort_flag = (flags & 32) >> 5;	/* is local palette sorted by color frequency ? */
 	i->localpalbits = (flags & 7) + 1;
-	if(flags&128) { // palette locale
+	if(flags&128) { /* palette locale */
 		int k;
 		int localpalsize = 1 << i->localpalbits;
 		if(i->parent && i->parent->log) fprintf(i->parent->log, "Local palette\n");
@@ -368,7 +368,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	}
 	i->ncolors = 1 << i->localpalbits;
 	
-	i->imgbits = GetByte(i->parent);	// LZW Minimum Code Size
+	i->imgbits = GetByte(i->parent);	/* LZW Minimum Code Size */
 
 	if(i->parent && i->parent->log) {
 		if(i->interlaced) fprintf(i->parent->log, "interlaced ");
@@ -389,8 +389,8 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	i->max = maxsav;
 	stackp = stack_top = ab_stack + 4096;
 	
-	i->restbits = 0;	// initialise le "buffer" de lecture
-	i->restbyte = 0;	// des codes LZW
+	i->restbits = 0;	/* initialise le "buffer" de lecture */
+	i->restbyte = 0;	/* des codes LZW */
 	i->lbyte = 0;
 	for(;;) {
 		act_code = GetGifWord(i);
@@ -404,7 +404,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 		}	
 		if(act_code==clr) {
 			if(i->parent && i->parent->log) fprintf(i->parent->log, "Code clear (free=%hu)\n", free);
-			// clear
+			/* clear */
 			free = freesav;
 			i->nbbit = nbbitsav;
 			i->max = maxsav;
@@ -415,23 +415,23 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 		} else {
 			read_byt = act_code;
 			if(act_code >= free) {	/* code pas encore dans alphabet */
-//				printf("Code pas dans alphabet : %d>=%d push %d\n", act_code, free, casspecial);
+/*				printf("Code pas dans alphabet : %d>=%d push %d\n", act_code, free, casspecial); */
 				*(--stackp) = casspecial; /* dernier debut de chaine ! */
 				act_code = old_code;
 			}
-//			printf("actcode=%d\n", act_code);
+/*			printf("actcode=%d\n", act_code); */
 			while(act_code > clr) { /* code non concret */
-				// fillstackloop empile les suffixes !
+				/* fillstackloop empile les suffixes ! */
 				*(--stackp) = ab_suffx[act_code];
-				act_code = ab_prfx[act_code];	// prefixe
+				act_code = ab_prfx[act_code];	/* prefixe */
 			}
-			// act_code est concret
+			/* act_code est concret */
 			casspecial = (u8)act_code;	/* dernier debut de chaine ! */
 			*(--stackp) = casspecial;	/* push on stack */
 			WritePixels(i, stackp, stack_top - stackp);	/* unstack all pixels at once */
 			stackp = stack_top;
-//			putchar('\n');
-			if(free < 4096) { // la taille du dico est 4096 max !
+/*			putchar('\n'); */
+			if(free < 4096) { /* la taille du dico est 4096 max ! */
 				ab_prfx[free] = old_code;
 				ab_suffx[free] = (u8)act_code;
 				free++;
@@ -490,8 +490,8 @@ int LoadGif(struct ngiflib_gif * g) {
 		                                      Size of Global Color Table    3 Bits */
 		g->colorresolution = ((tmp & 0x70) >> 4) + 1;
 		g->sort_flag = (tmp & 8) >> 3;
-		g->imgbits = (tmp & 7) + 1;	// Global Palette color resolution
-		g->ncolors = 1 << g->imgbits;	//
+		g->imgbits = (tmp & 7) + 1;	/* Global Palette color resolution */
+		g->ncolors = 1 << g->imgbits;
 
 		g->backgroundindex = GetByte(g);
 		g->transparent_flag = 0;
@@ -499,16 +499,16 @@ int LoadGif(struct ngiflib_gif * g) {
 		if(g->log) fprintf(g->log, "%hux%hu %hhubits %hu couleurs  bg=%hhu\n",
 		                   g->width, g->height, g->imgbits, g->ncolors, g->backgroundindex);
 
-		g->pixaspectratio = GetByte(g);	// pixel aspect ratio (0 : unspecified)
+		g->pixaspectratio = GetByte(g);	/* pixel aspect ratio (0 : unspecified) */
 
 		if(tmp&0x80) {
-			// la palette globale suit.
+			/* la palette globale suit. */
 			g->palette = (struct ngiflib_rgb *)ngiflib_malloc(sizeof(struct ngiflib_rgb)*g->ncolors);
 			for(i=0; i<g->ncolors; i++) {
 				g->palette[i].r = GetByte(g);
 				g->palette[i].g = GetByte(g);
 				g->palette[i].b = GetByte(g);
-		//		printf("%3d %02X %02X %02X\n", i, g->palette[i].r,g->palette[i].g,g->palette[i].b);
+		/*		printf("%3d %02X %02X %02X\n", i, g->palette[i].r,g->palette[i].g,g->palette[i].b); */
 			}
 		} else {
 			g->palette = NULL;
@@ -519,7 +519,7 @@ int LoadGif(struct ngiflib_gif * g) {
 		u8 id,size;
 		int blockindex;
 
-		sign = GetByte(g);	// signature du prochain bloc
+		sign = GetByte(g);	/* signature du prochain bloc */
 		if(g->log) fprintf(g->log, "0x%02X\n", sign);
 		switch(sign) {
 		case 0x3B:	/* END OF GIF */
@@ -535,7 +535,7 @@ int LoadGif(struct ngiflib_gif * g) {
 				if(g->log) fprintf(g->log, "extension (id=0x%02hhx) index %d, size = %hhubytes\n",id,blockindex,size);
 
 				switch(id) {
-				case 0xF9:	//Graphic Control Extension
+				case 0xF9:	/* Graphic Control Extension */
 					g->disp_method = (ext[0] >> 2) & 7;
 					g->transparent_flag = ext[0] & 1;
 					g->userinputflag = (ext[0] >> 1) & 1;
@@ -545,7 +545,7 @@ int LoadGif(struct ngiflib_gif * g) {
 					       g->disp_method, g->delay_time, g->transparent_flag, g->transparent_color);
 					if(g->transparent_flag) FillGifBackGround(g);
 					break;
-				case 0xFE:	//Comment Extension.
+				case 0xFE:	/* Comment Extension. */
 					if(g->log) {
 						fprintf(g->log, "-------------------- Comment extension --------------------\n");
 						ext[size] = '\0';
@@ -553,7 +553,7 @@ int LoadGif(struct ngiflib_gif * g) {
 						fprintf(g->log, "-----------------------------------------------------------\n");
 					}
 					break;
-				case 0xFF:	// app extension      faire qqch avec ?
+				case 0xFF:	/* app extension      faire qqch avec ? */
 					if(blockindex==0) {
 						char appid[9];
 						ngiflib_memcpy(appid, ext, 8);
@@ -581,7 +581,7 @@ int LoadGif(struct ngiflib_gif * g) {
 						}
 					}
 					break;
-				case 0x01:	// plain text extension
+				case 0x01:	/* plain text extension */
 					if(g->log) {
 						fprintf(g->log, "Plain text extension\n");
 						for(i=0; i<size; i++) {
@@ -607,9 +607,9 @@ int LoadGif(struct ngiflib_gif * g) {
 			DecodeGifImg(g->cur_img);
 			g->nimg++;
 
-			tmp = GetByte(g);//0 final
+			tmp = GetByte(g);/* 0 final */
 			if(g->log) fprintf(g->log, "0x%02X\n", tmp);
-			return 1;	// image decodée
+			return 1;	/* image decodée */
 		default:
 			/* unexpected byte */
 			if(g->log) fprintf(g->log, "unexpected signature 0x%02X\n", sign);

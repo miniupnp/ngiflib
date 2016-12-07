@@ -7,7 +7,7 @@
 FILE * fgif;
 FILE * ftga;
 
-// ====================================== MAIN ===============================
+/* ==================================== MAIN =============================== */
 int main(int argc, char * * argv) {
 	struct ngiflib_gif * gif;
 	struct ngiflib_img * img;
@@ -72,7 +72,7 @@ int main(int argc, char * * argv) {
 	/* MAIN LOOP */
 	do {
 	  printf("LoadGif()\n");
-	  err = LoadGif(gif);	// en retour 0=fini, 1=une image decodee, -1=ERREUR
+	  err = LoadGif(gif); /* en retour 0=fini, 1=une image decodee, -1=ERREUR */
 	
 	  if(err==1) {
 	  	int localpalsize;
@@ -94,19 +94,19 @@ int main(int argc, char * * argv) {
 			fprintf(stderr, "cannot open file %s for writing.\n", tganame);
 			return 5;
 		}
-		putc(0, ftga);	//0
+		putc(0, ftga);	/* 0 */
 		if(gif->mode & NGIFLIB_MODE_INDEXED) {
-			putc(1, ftga);// With palette
-			putc(1, ftga);// With palette
-			putc(0, ftga);// Color Map Origin.
-			putc(0, ftga);//  "
-			putc(localpalsize & 255, ftga);// Color Map Length.
-			putc(localpalsize >> 8, ftga);//  "
-			putc(24, ftga);// Color Map Entry Size.
+			putc(1, ftga);/* With palette */
+			putc(1, ftga);/* With palette */
+			putc(0, ftga);/* Color Map Origin. */
+			putc(0, ftga);/*  "                */
+			putc(localpalsize & 255, ftga);/* Color Map Length. */
+			putc(localpalsize >> 8, ftga);/*  "                 */
+			putc(24, ftga);/* Color Map Entry Size. */
 			for(i=0; i<4; i++) putc(0, ftga);
 		} else {
 			putc(0, ftga);
-			putc(2, ftga);// Truecolor
+			putc(2, ftga);/* Truecolor */
 			for(i=0; i<9; i++) putc(0, ftga);
 		}
 		putc(gif->width & 255, ftga);
@@ -114,16 +114,16 @@ int main(int argc, char * * argv) {
 		putc(gif->height & 255, ftga);
 		putc(gif->height >>8, ftga);
 		if(gif->mode & NGIFLIB_MODE_INDEXED) {
-			putc(8, ftga);	// bits per pixel
-			putc(32, ftga);	// top down
+			putc(8, ftga);	/* bits per pixel */
+			putc(32, ftga);	/* top down       */
 			for(i=0; i<localpalsize; i++) {
 				putc(img->palette[i].b, ftga);
 				putc(img->palette[i].g, ftga);
 				putc(img->palette[i].r, ftga);
 			}
 		} else {
-			putc(32, ftga);	//16	// bits per pixel
-			putc(32+8, ftga); // top down
+			putc(32, ftga);	/* 16	/ bits per pixel */
+			putc(32+8, ftga); /* top down */
 		}
 		fwrite(gif->frbuff, (gif->mode & NGIFLIB_MODE_INDEXED)?1:4,
 		      (size_t)gif->width * (size_t)gif->height, ftga);
@@ -138,7 +138,7 @@ int main(int argc, char * * argv) {
 #if DEBUG
 	fprintf_ngiflib_gif(stdout, gif);
 #endif /* DEBUG */
-	GifDestroy(gif);	// libere la ram
+	GifDestroy(gif);	/* libere la ram */
 	
 	if(log) fclose(log);
 	return 0;

@@ -13,8 +13,10 @@ static int appactive = 1;
 void manage_event() {
 	SDL_Event event;
 	SDL_WaitEvent(&event);
-	//while(SDL_PollEvent(&event)) {
-		//printf("\\o/\n");
+#if 0
+	while(SDL_PollEvent(&event)) {
+		printf("\\o/\n");
+#endif
 		switch(event.type) {
 		case SDL_ACTIVEEVENT:
 			if(event.active.state & SDL_APPACTIVE)
@@ -43,7 +45,9 @@ void manage_event() {
 		default:
 			printf("event.type = %d\n", event.type);
 		}
-	//}
+#if 0
+	}
+#endif
 }
 
 void ShowGIF(char *file, SDL_Surface *screen, int x, int y)
@@ -90,7 +94,7 @@ int main(int argc, char* * argv) {
 		return 1;
 	}
 	atexit(SDL_Quit);
-	SDL_WM_SetCaption("SDL gif viewer", "gif viewer"); // window caption, icon caption
+	SDL_WM_SetCaption("SDL gif viewer", "gif viewer"); /* window caption, icon caption */
 	vidinf = SDL_GetVideoInfo();
 	printf("bpp of the \"best\" video mode = %d \n", vidinf->vfmt->BitsPerPixel);
 	modes = SDL_ListModes(NULL, SDL_HWSURFACE);
