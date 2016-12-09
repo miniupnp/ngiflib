@@ -35,6 +35,13 @@ struct ngiflib_rgb {
 };
 u32 GifIndexToTrueColor(struct ngiflib_rgb * palette, u8 v);
 
+union ngiflib_pixpointer {
+	u8 * p8;
+#ifndef NGIFLIB_INDEXED_ONLY
+	u32 * p32;
+#endif /* NGIFLIB_INDEXED_ONLY */
+};
+
 /* struct stoquant les parametres relatifs a une image. */
 struct ngiflib_img {
 	struct ngiflib_img * next;
@@ -53,10 +60,7 @@ struct ngiflib_img {
 
 /* utilises juste pour la decompression */
 struct ngiflib_decode_context {
-	u8 * frbuff_p8;	/* current offset in frame buffer */
-#ifndef NGIFLIB_INDEXED_ONLY
-	u32 * frbuff_p32;	/* current offset in frame buffer */
-#endif /* NGIFLIB_INDEXED_ONLY */
+	union ngiflib_pixpointer frbuff_p;	/* current offset in frame buffer */
 	const u8 * srcbyte;
 	u16 Xtogo;
 	u16 curY;
@@ -98,7 +102,7 @@ struct ngiflib_gif {
 	struct ngiflib_img * cur_img;
 	struct ngiflib_rgb * palette;
 	void * input;	/* used by GetByte */
-	u32 * frbuff;	/* frame buffer    */
+	union ngiflib_pixpointer frbuff;	/* frame buffer    */
 	FILE * log;		/* to output log   */
 	int nimg;
 	u16 ncolors;

@@ -28,7 +28,7 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 		GifDestroy(gif);
 		return NULL;
 	}
-	p = (u8 *)gif->frbuff;
+	p = gif->frbuff.p8;
 	/*
 	surface = SDL_CreateRGBSurfaceFrom(p, gif->width, gif->height,
 	                                   32, gif->width << 2,

@@ -125,7 +125,7 @@ int main(int argc, char * * argv) {
 			putc(32, ftga);	/* 16	/ bits per pixel */
 			putc(32+8, ftga); /* top down */
 		}
-		fwrite(gif->frbuff, (gif->mode & NGIFLIB_MODE_INDEXED)?1:4,
+		fwrite(gif->frbuff.p8, (gif->mode & NGIFLIB_MODE_INDEXED)?1:4,
 		      (size_t)gif->width * (size_t)gif->height, ftga);
 		fclose(ftga);
 		printf("%s written\n",tganame);
