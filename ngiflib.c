@@ -62,11 +62,9 @@ void GifDestroy(struct ngiflib_gif * g) {
  */
 static u8 GetByte(struct ngiflib_gif * g) {
 	if(g->mode & NGIFLIB_MODE_FROM_MEM) {
-		u8 b = *((u8 *)g->input);
-		g->input = (u8 *)g->input + 1;
-		return b;
+		return *(g->input.bytes++);
 	} else {
-		return (u8)(getc((FILE *)g->input));
+		return (u8)(getc(g->input.file));
 	}
 }
 
@@ -88,12 +86,12 @@ static u16 GetWord(struct ngiflib_gif * g) {
 static int GetByteStr(struct ngiflib_gif * g, u8 * p, int n) {
 	if(!p) return -1;
 	if(g->mode & NGIFLIB_MODE_FROM_MEM) {
-		memcpy(p, g->input, n);
-		g->input = (u8 *)g->input + n;
+		memcpy(p, g->input.bytes, n);
+		g->input.bytes += n;
 		return 0;
 	} else {
 		size_t read;
-		read = fread(p, 1, n, (FILE *)g->input);
+		read = fread(p, 1, n, g->input.file);
 		return ((int)read == n) ? 0 : -1;
 	}
 }

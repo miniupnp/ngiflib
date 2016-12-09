@@ -62,7 +62,7 @@ int main(int argc, char * * argv) {
 		printf("Cannot open %s\n",argv[1]);
 		return 3;
 	}
-	gif->input = (void *)fgif;
+	gif->input.file = fgif;
 	gif->mode = NGIFLIB_MODE_FROM_FILE;
 	if(indexed) {
 		gif->mode |= NGIFLIB_MODE_INDEXED;

@@ -22,6 +22,10 @@ typedef uint32_t u32;
 #define ngiflib_memcpy memcpy
 #define ngiflib_memset memset
 
+#ifndef NGIFLIB_NO_FILE
+#include <stdio.h>
+#endif /* NGIFLIB_NO_FILE */
+
 /* Modes pour struct ngiflib_gif.mode
  */
 #define NGIFLIB_MODE_TRUE_COLOR	(0x00)
@@ -101,7 +105,12 @@ struct ngiflib_gif {
 	struct ngiflib_img * first_img;
 	struct ngiflib_img * cur_img;
 	struct ngiflib_rgb * palette;
-	void * input;	/* used by GetByte */
+	union {
+#ifndef NGIFLIB_NO_FILE
+		FILE * file;
+#endif
+		const u8 * bytes;
+	} input;	/* used by GetByte */
 	union ngiflib_pixpointer frbuff;	/* frame buffer    */
 	FILE * log;		/* to output log   */
 	int nimg;

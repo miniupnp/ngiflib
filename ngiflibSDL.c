@@ -18,7 +18,7 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 		return NULL;
 	gif = (struct ngiflib_gif *)ngiflib_malloc(sizeof(struct ngiflib_gif));
 	ngiflib_memset(gif, 0, sizeof(struct ngiflib_gif));
-	gif->input = (void *)fgif;
+	gif->input.file = fgif;
 	/*gif->mode = NGIFLIB_MODE_FROM_FILE | NGIFLIB_MODE_TRUE_COLOR; */
 	gif->mode = NGIFLIB_MODE_FROM_FILE | NGIFLIB_MODE_INDEXED;
 	err = LoadGif(gif);
