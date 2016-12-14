@@ -121,12 +121,21 @@ int main(int argc, char * * argv) {
 				putc(img->palette[i].g, ftga);
 				putc(img->palette[i].r, ftga);
 			}
+			fwrite(gif->frbuff.p8, 1,
+			      (size_t)gif->width * (size_t)gif->height, ftga);
 		} else {
+			long l;
+			u32 pixel;
 			putc(32, ftga);	/* 16	/ bits per pixel */
 			putc(32+8, ftga); /* top down */
+			for(l = 0; l < (long)gif->width * (long)gif->height; l++) {
+				pixel = gif->frbuff.p32[l];
+				putc(pixel & 0xff, ftga);	/* B */
+				putc((pixel >> 8) & 0xff, ftga);	/* G */
+				putc((pixel >> 16) & 0xff, ftga);	/* R */
+				putc(0xff, ftga);	/* A */
+			}
 		}
-		fwrite(gif->frbuff.p8, (gif->mode & NGIFLIB_MODE_INDEXED)?1:4,
-		      (size_t)gif->width * (size_t)gif->height, ftga);
 		fclose(ftga);
 		printf("%s written\n",tganame);
 	  }
