@@ -1,8 +1,13 @@
-ngiflib version 0.2.
+ngiflib version 0.3.
 (c) Thomas BERNARD
 All rights Reserved
 Tous droits réservés.
 
-Please contact me at thomas.bernard8@free.fr if you want to use
-this library.
-Contactez moi grace à thomas.bernard8@free.fr si vous voulez utiliser cette lib.
+Please contact me at thomas.bernard8@free.fr if you want to use this library.
+Contactez moi grace à thomas.bernard8@free.fr si vous voulez utiliser cette
+bibliothèque.
+
+defines :
+ DEBUG :                add debug functions
+ NGIFLIB_NO_FILE :      remove code for reading stdio FILE
+ NGIFLIB_INDEXED_ONLY : remove code for truecolor output
