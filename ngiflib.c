@@ -126,7 +126,7 @@ static void WritePixel(struct ngiflib_img * i, struct ngiflib_decode_context * c
 	}
 	if(--(context->Xtogo) <= 0) {
 		#ifdef NGIFLIB_ENABLE_CALLBACKS
-		if(p->line_cb) p->line_cb(p, context->line_p, i->posY);
+		if(p->line_cb) p->line_cb(p, context->line_p, context->curY);
 		#endif /* NGIFLIB_ENABLE_CALLBACKS */
 		context->Xtogo = i->width;
 		switch(context->pass) {
@@ -217,7 +217,7 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 		context->Xtogo -= tocopy;
 		if(context->Xtogo == 0) {
 			#ifdef NGIFLIB_ENABLE_CALLBACKS
-			if(p->line_cb) p->line_cb(p, context->line_p, i->posY);
+			if(p->line_cb) p->line_cb(p, context->line_p, context->curY);
 			#endif /* NGIFLIB_ENABLE_CALLBACKS */
 			context->Xtogo = i->width;
 			switch(context->pass) {
