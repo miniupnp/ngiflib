@@ -13,16 +13,38 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 	int err,i;
 	u8 * pdst, * psrc;
 	u8 * p = NULL;
+#ifdef NGIFLIB_NO_FILE
+	u8 * buffer;
+	long filesize;
+#endif /* NGIFLIB_NO_FILE */
+
 	fgif = fopen(file, "rb");
 	if(fgif==NULL)
 		return NULL;
 	gif = (struct ngiflib_gif *)ngiflib_malloc(sizeof(struct ngiflib_gif));
 	ngiflib_memset(gif, 0, sizeof(struct ngiflib_gif));
+#ifdef NGIFLIB_NO_FILE
+	fseek(fgif, 0, SEEK_END);
+	filesize = ftell(fgif);
+	fseek(fgif, 0, SEEK_SET);
+	buffer = malloc(filesize);
+	if(buffer == NULL) {
+		GifDestroy(gif);
+		return NULL;
+	}
+	fread(buffer, 1, filesize, fgif);
+	gif->input.bytes = buffer;
+	gif->mode = NGIFLIB_MODE_FROM_MEM | NGIFLIB_MODE_INDEXED;
+#else /* NGIFLIB_NO_FILE */
 	gif->input.file = fgif;
 	/*gif->mode = NGIFLIB_MODE_FROM_FILE | NGIFLIB_MODE_TRUE_COLOR; */
 	gif->mode = NGIFLIB_MODE_FROM_FILE | NGIFLIB_MODE_INDEXED;
+#endif /* NGIFLIB_NO_FILE */
 	err = LoadGif(gif);
 	fclose(fgif);
+#ifdef NGIFLIB_NO_FILE
+	free(buffer);
+#endif /* NGIFLIB_NO_FILE */
 	if(err!=1)
 	{
 		GifDestroy(gif);

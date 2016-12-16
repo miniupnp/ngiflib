@@ -9,5 +9,5 @@ bibliothèque.
 
 defines :
  DEBUG :                add debug functions
- NGIFLIB_NO_FILE :      remove code for reading stdio FILE
+ NGIFLIB_NO_FILE :      remove dependencies to stdio FILE
  NGIFLIB_INDEXED_ONLY : remove code for truecolor output

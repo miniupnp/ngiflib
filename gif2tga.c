@@ -17,6 +17,10 @@ int main(int argc, char * * argv) {
 	int indexed = 0;
 	const char * outbase = NULL;
 	FILE * log = NULL;
+#ifdef NGIFLIB_NO_FILE
+	long filesize;
+	u8 * buffer;
+#endif /* NGIFLIB_NO_FILE */
 
 	if(argc<2) {
 		printf("Usage: machin [--log logfile] [--indexed|-i] [--outbase path/file] truc.gif\n");
@@ -55,15 +59,32 @@ int main(int argc, char * * argv) {
 
 	gif = (struct ngiflib_gif *)malloc(sizeof(struct ngiflib_gif));
 	memset(gif, 0, sizeof(struct ngiflib_gif));
+#ifndef NGIFLIB_NO_FILE
 	gif->log = log;
+#endif /* NGIFLIB_NO_FILE */
 
 	fgif = fopen(input_file, "rb");
 	if(fgif==NULL) {
 		printf("Cannot open %s\n",argv[1]);
 		return 3;
 	}
+#ifdef NGIFLIB_NO_FILE
+	fseek(fgif, 0, SEEK_END);
+	filesize = ftell(fgif);
+	fseek(fgif, 0, SEEK_SET);
+	buffer = malloc(filesize);
+	if(buffer == NULL) {
+		printf("Cannot allocate %ld bytes of memory.\n", filesize);
+		fclose(fgif);
+		return 4;
+	}
+	fread(buffer, 1, filesize, fgif);
+	gif->input.bytes = buffer;
+	gif->mode = NGIFLIB_MODE_FROM_MEM;
+#else /* NGIFLIB_NO_FILE */
 	gif->input.file = fgif;
 	gif->mode = NGIFLIB_MODE_FROM_FILE;
+#endif /* NGIFLIB_NO_FILE */
 	if(indexed) {
 		gif->mode |= NGIFLIB_MODE_INDEXED;
 		printf("INDEXED MODE\n");
@@ -71,8 +92,8 @@ int main(int argc, char * * argv) {
 	
 	/* MAIN LOOP */
 	do {
-	  printf("LoadGif()\n");
 	  err = LoadGif(gif); /* en retour 0=fini, 1=une image decodee, -1=ERREUR */
+	  printf("LoadGif() returned %d\n", err);
 	
 	  if(err==1) {
 	  	int localpalsize;
@@ -143,6 +164,9 @@ int main(int argc, char * * argv) {
 	} while(err==1);
 
 	fclose(fgif);
+#ifdef NGIFLIB_NO_FILE
+	free(buffer);
+#endif /* NGIFLIB_NO_FILE */
 	
 #if DEBUG
 	fprintf_ngiflib_gif(stdout, gif);

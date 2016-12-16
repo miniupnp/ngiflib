@@ -1,9 +1,12 @@
+#ifndef NGIFLIB_NO_FILE
 #include <stdio.h>
+#endif /* NGIFLIB_NO_FILE */
 
 #include "ngiflib.h"
 
 /* decodeur GIF en C portable (pas de pb big/little endian
  * Thomas BERNARD. janvier 2004.
+ * (c) 2004-2016 Thomas Bernard. All rights reserved
  */
 
 /* Fonction de debug */
@@ -61,11 +64,15 @@ void GifDestroy(struct ngiflib_gif * g) {
  * on pourait optimiser en faisant 2 fonctions.
  */
 static u8 GetByte(struct ngiflib_gif * g) {
+#ifndef NGIFLIB_NO_FILE
 	if(g->mode & NGIFLIB_MODE_FROM_MEM) {
+#endif /* NGIFLIB_NO_FILE */
 		return *(g->input.bytes++);
+#ifndef NGIFLIB_NO_FILE
 	} else {
 		return (u8)(getc(g->input.file));
 	}
+#endif /* NGIFLIB_NO_FILE */
 }
 
 /* u16 GetWord()
@@ -85,15 +92,19 @@ static u16 GetWord(struct ngiflib_gif * g) {
  */
 static int GetByteStr(struct ngiflib_gif * g, u8 * p, int n) {
 	if(!p) return -1;
+#ifndef NGIFLIB_NO_FILE
 	if(g->mode & NGIFLIB_MODE_FROM_MEM) {
+#endif /* NGIFLIB_NO_FILE */
 		memcpy(p, g->input.bytes, n);
 		g->input.bytes += n;
 		return 0;
+#ifndef NGIFLIB_NO_FILE
 	} else {
 		size_t read;
 		read = fread(p, 1, n, g->input.file);
 		return ((int)read == n) ? 0 : -1;
 	}
+#endif /* NGIFLIB_NO_FILE */
 }
 
 /* void WritePixel(struct ngiflib_img * i, u8 v);
@@ -260,18 +271,18 @@ static u16 GetGifWord(struct ngiflib_img * i, struct ngiflib_decode_context * co
 		} else {
 			if(context->restbyte == 0) {
 				context->restbyte = GetByte(i->parent);
-#ifdef DEBUG
+#if defined(DEBUG) && !defined(NGIFLIB_NO_FILE)
 				if(i->parent->log) fprintf(i->parent->log, "restbyte = %02X\n", context->restbyte);
-#endif /* DEBUG */
+#endif /* defined(DEBUG) && !defined(NGIFLIB_NO_FILE) */
 				GetByteStr(i->parent, context->byte_buffer, context->restbyte);
 				context->srcbyte = context->byte_buffer;
 			}
 			r = *context->srcbyte++;
 			if(--context->restbyte == 0) {
 				context->restbyte = GetByte(i->parent);
-#ifdef DEBUG
+#if defined(DEBUG) && !defined(NGIFLIB_NO_FILE)
 				if(i->parent->log) fprintf(i->parent->log, "restbyte = %02X\n", context->restbyte);
-#endif /* DEBUG */
+#endif /* defined(DEBUG) && !defined(NGIFLIB_NO_FILE) */
 				GetByteStr(i->parent, context->byte_buffer, context->restbyte);
 				context->srcbyte = context->byte_buffer;
 			}
@@ -285,9 +296,9 @@ static u16 GetGifWord(struct ngiflib_img * i, struct ngiflib_decode_context * co
 	} else /*if( bits_todo > 0 )*/ { /* nbbit > restbits */
 		if(context->restbyte == 0) {
 			context->restbyte = GetByte(i->parent);
-#ifdef DEBUG
+#if defined(DEBUG) && !defined(NGIFLIB_NO_FILE)
 			if(i->parent->log) fprintf(i->parent->log, "restbyte = %02X\n", context->restbyte);
-#endif /* DEBUG */
+#endif /* defined(DEBUG) && !defined(NGIFLIB_NO_FILE) */
 			GetByteStr(i->parent, context->byte_buffer, context->restbyte);
 			context->srcbyte = context->byte_buffer;
 		}
@@ -374,7 +385,9 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	if(flags&128) { /* palette locale */
 		int k;
 		int localpalsize = 1 << i->localpalbits;
+#if !defined(NGIFLIB_NO_FILE)
 		if(i->parent && i->parent->log) fprintf(i->parent->log, "Local palette\n");
+#endif /* !defined(NGIFLIB_NO_FILE) */
 		i->palette = (struct ngiflib_rgb *)ngiflib_malloc(sizeof(struct ngiflib_rgb)*localpalsize);
 		for(k=0; k<localpalsize; k++) {
 			i->palette[k].r = GetByte(i->parent);
@@ -389,11 +402,13 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	
 	i->imgbits = GetByte(i->parent);	/* LZW Minimum Code Size */
 
+#if !defined(NGIFLIB_NO_FILE)
 	if(i->parent && i->parent->log) {
 		if(i->interlaced) fprintf(i->parent->log, "interlaced ");
 		fprintf(i->parent->log, "img pos(%hu,%hu) size %hux%hu palbits=%hhu imgbits=%hhu ncolors=%hu\n",
 	       i->posX, i->posY, i->width, i->height, i->localpalbits, i->imgbits, i->ncolors);
 	}
+#endif /* !defined(NGIFLIB_NO_FILE) */
 
 	if(i->imgbits==1) {	/* fix for 1bit images ? */
 		i->imgbits = 2;
@@ -414,15 +429,21 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	for(;;) {
 		act_code = GetGifWord(i, &context);
 		if(act_code==eof) {
+#if !defined(NGIFLIB_NO_FILE)
 			if(i->parent && i->parent->log) fprintf(i->parent->log, "End of image code\n");
+#endif /* !defined(NGIFLIB_NO_FILE) */
 			return 0;
 		}
 		if(npix==0) {
+#if !defined(NGIFLIB_NO_FILE)
 			if(i->parent && i->parent->log) fprintf(i->parent->log, "assez de pixels, On se casse !\n");
+#endif /* !defined(NGIFLIB_NO_FILE) */
 			return 1;
 		}	
 		if(act_code==clr) {
+#if !defined(NGIFLIB_NO_FILE)
 			if(i->parent && i->parent->log) fprintf(i->parent->log, "Code clear (free=%hu)\n", free);
+#endif /* !defined(NGIFLIB_NO_FILE) */
 			/* clear */
 			free = freesav;
 			context.nbbit = nbbitsav;
@@ -491,7 +512,9 @@ int LoadGif(struct ngiflib_gif * g) {
 		   || g->signature[3] != '8') {
 			return -1;
 		}
+#if !defined(NGIFLIB_NO_FILE)
 		if(g->log) fprintf(g->log, "%s\n", g->signature);
+#endif /* !defined(NGIFLIB_NO_FILE) */
 
 		g->width = GetWord(g);
 		g->height = GetWord(g);
@@ -515,8 +538,10 @@ int LoadGif(struct ngiflib_gif * g) {
 		g->backgroundindex = GetByte(g);
 		g->transparent_flag = 0;
 
+#if !defined(NGIFLIB_NO_FILE)
 		if(g->log) fprintf(g->log, "%hux%hu %hhubits %hu couleurs  bg=%hhu\n",
 		                   g->width, g->height, g->imgbits, g->ncolors, g->backgroundindex);
+#endif /* NGIFLIB_INDEXED_ONLY */
 
 		g->pixaspectratio = GetByte(g);	/* pixel aspect ratio (0 : unspecified) */
 
@@ -539,7 +564,9 @@ int LoadGif(struct ngiflib_gif * g) {
 		int blockindex;
 
 		sign = GetByte(g);	/* signature du prochain bloc */
+#if !defined(NGIFLIB_NO_FILE)
 		if(g->log) fprintf(g->log, "0x%02X\n", sign);
+#endif /* NGIFLIB_INDEXED_ONLY */
 		switch(sign) {
 		case 0x3B:	/* END OF GIF */
 			return 0;
@@ -551,7 +578,9 @@ int LoadGif(struct ngiflib_gif * g) {
 
 				GetByteStr(g, ext, size);
 
+#if !defined(NGIFLIB_NO_FILE)
 				if(g->log) fprintf(g->log, "extension (id=0x%02hhx) index %d, size = %hhubytes\n",id,blockindex,size);
+#endif /* NGIFLIB_INDEXED_ONLY */
 
 				switch(id) {
 				case 0xF9:	/* Graphic Control Extension */
@@ -560,23 +589,28 @@ int LoadGif(struct ngiflib_gif * g) {
 					g->userinputflag = (ext[0] >> 1) & 1;
 					g->delay_time = ext[1] | (ext[2]<<8);
 					g->transparent_color = ext[3];
+#if !defined(NGIFLIB_NO_FILE)
 					if(g->log) fprintf(g->log, "disp_method=%hhu delay_time=%hu (transp=%hhu)transparent_color=0x%02hhX\n",
 					       g->disp_method, g->delay_time, g->transparent_flag, g->transparent_color);
+#endif /* NGIFLIB_INDEXED_ONLY */
 					if(g->transparent_flag) FillGifBackGround(g);
 					break;
 				case 0xFE:	/* Comment Extension. */
+#if !defined(NGIFLIB_NO_FILE)
 					if(g->log) {
 						fprintf(g->log, "-------------------- Comment extension --------------------\n");
 						ext[size] = '\0';
 						fputs((char *)ext, g->log);
 						fprintf(g->log, "-----------------------------------------------------------\n");
 					}
+#endif /* NGIFLIB_INDEXED_ONLY */
 					break;
 				case 0xFF:	/* app extension      faire qqch avec ? */
 					if(blockindex==0) {
 						char appid[9];
 						ngiflib_memcpy(appid, ext, 8);
 						appid[8] = 0;
+#if !defined(NGIFLIB_NO_FILE)
 						if(g->log) {
 							fprintf(g->log, "---------------- Application extension ---------------\n");
 							fprintf(g->log, "Application identifier : '%s', auth code : %02X %02X %02X (",
@@ -586,7 +620,9 @@ int LoadGif(struct ngiflib_gif * g) {
 							fputc((ext[10]<32)?' ':ext[10], g->log);
 							fprintf(g->log, ")\n");
 						}
+#endif /* NGIFLIB_INDEXED_ONLY */
 					} else {
+#if !defined(NGIFLIB_NO_FILE)
 						if(g->log) {
 							fprintf(g->log, "Datas (as hex) : ");
 							for(i=0; i<size; i++) {
@@ -598,9 +634,11 @@ int LoadGif(struct ngiflib_gif * g) {
 							}
 							fprintf(g->log, "'\n");
 						}
+#endif /* NGIFLIB_INDEXED_ONLY */
 					}
 					break;
 				case 0x01:	/* plain text extension */
+#if !defined(NGIFLIB_NO_FILE)
 					if(g->log) {
 						fprintf(g->log, "Plain text extension\n");
 						for(i=0; i<size; i++) {
@@ -608,6 +646,7 @@ int LoadGif(struct ngiflib_gif * g) {
 						}
 						putc('\n', g->log);
 					}
+#endif /* NGIFLIB_INDEXED_ONLY */
 					break;
 				}
 				blockindex++;
@@ -627,11 +666,15 @@ int LoadGif(struct ngiflib_gif * g) {
 			g->nimg++;
 
 			tmp = GetByte(g);/* 0 final */
+#if !defined(NGIFLIB_NO_FILE)
 			if(g->log) fprintf(g->log, "0x%02X\n", tmp);
+#endif /* NGIFLIB_INDEXED_ONLY */
 			return 1;	/* image decodée */
 		default:
 			/* unexpected byte */
+#if !defined(NGIFLIB_NO_FILE)
 			if(g->log) fprintf(g->log, "unexpected signature 0x%02X\n", sign);
+#endif /* NGIFLIB_INDEXED_ONLY */
 			return -1;
 		}
 	}

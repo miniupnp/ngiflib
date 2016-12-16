@@ -79,7 +79,9 @@ struct ngiflib_decode_context {
 
 void GifImgDestroy(struct ngiflib_img * i);
 /* Fonction de debug */
+#ifdef DEBUG
 void fprintf_ngiflib_img(FILE * f, struct ngiflib_img * i);
+#endif /* DEBUG */
 
 /* disp_method :
             iv) Disposal Method - Indicates the way in which the graphic is to
@@ -108,11 +110,13 @@ struct ngiflib_gif {
 	union {
 #ifndef NGIFLIB_NO_FILE
 		FILE * file;
-#endif
+#endif /* NGIFLIB_NO_FILE */
 		const u8 * bytes;
 	} input;	/* used by GetByte */
 	union ngiflib_pixpointer frbuff;	/* frame buffer    */
+#ifndef NGIFLIB_NO_FILE
 	FILE * log;		/* to output log   */
+#endif /* NGIFLIB_NO_FILE */
 	int nimg;
 	u16 ncolors;
 	u16 width;
@@ -133,7 +137,9 @@ struct ngiflib_gif {
 
 void GifDestroy(struct ngiflib_gif * g);
 /* Fonction de debug */
+#ifdef DEBUG
 void fprintf_ngiflib_gif(FILE * f, struct ngiflib_gif * g);
+#endif /* DEBUG */
 
 int CheckGif(u8 * b);
 
