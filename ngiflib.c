@@ -125,6 +125,9 @@ static void WritePixel(struct ngiflib_img * i, struct ngiflib_decode_context * c
 #endif /* NGIFLIB_INDEXED_ONLY */
 	}
 	if(--(context->Xtogo) <= 0) {
+		#ifdef NGIFLIB_ENABLE_CALLBACKS
+		if(p->line_cb) p->line_cb(p, context->line_p, i->posY);
+		#endif /* NGIFLIB_ENABLE_CALLBACKS */
 		context->Xtogo = i->width;
 		switch(context->pass) {
 		case 0:
@@ -159,9 +162,15 @@ static void WritePixel(struct ngiflib_img * i, struct ngiflib_decode_context * c
 		if(p->mode & NGIFLIB_MODE_INDEXED) {
 #endif /* NGIFLIB_INDEXED_ONLY */
 			context->frbuff_p.p8 = p->frbuff.p8 + (u32)context->curY*p->width + i->posX;
+			#ifdef NGIFLIB_ENABLE_CALLBACKS
+			context->line_p.p8 = p->frbuff.p8 + (u32)context->curY*p->width;
+			#endif /* NGIFLIB_ENABLE_CALLBACKS */
 #ifndef NGIFLIB_INDEXED_ONLY
 		} else {
 			context->frbuff_p.p32 = p->frbuff.p32 + (u32)context->curY*p->width + i->posX;
+			#ifdef NGIFLIB_ENABLE_CALLBACKS
+			context->line_p.p32 = p->frbuff.p32 + (u32)context->curY*p->width;
+			#endif /* NGIFLIB_ENABLE_CALLBACKS */
 		}
 #endif /* NGIFLIB_INDEXED_ONLY */
 	} else {
@@ -207,6 +216,9 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 		}
 		context->Xtogo -= tocopy;
 		if(context->Xtogo == 0) {
+			#ifdef NGIFLIB_ENABLE_CALLBACKS
+			if(p->line_cb) p->line_cb(p, context->line_p, i->posY);
+			#endif /* NGIFLIB_ENABLE_CALLBACKS */
 			context->Xtogo = i->width;
 			switch(context->pass) {
 			case 0:
@@ -241,9 +253,15 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 			if(p->mode & NGIFLIB_MODE_INDEXED) {
 #endif /* NGIFLIB_INDEXED_ONLY */
 				context->frbuff_p.p8 = p->frbuff.p8 + (u32)context->curY*p->width + i->posX;
+				#ifdef NGIFLIB_ENABLE_CALLBACKS
+				context->line_p.p8 = p->frbuff.p8 + (u32)context->curY*p->width;
+				#endif /* NGIFLIB_ENABLE_CALLBACKS */
 #ifndef NGIFLIB_INDEXED_ONLY
 			} else {
 				context->frbuff_p.p32 = p->frbuff.p32 + (u32)context->curY*p->width + i->posX;
+				#ifdef NGIFLIB_ENABLE_CALLBACKS
+				context->line_p.p32 = p->frbuff.p32 + (u32)context->curY*p->width;
+				#endif /* NGIFLIB_ENABLE_CALLBACKS */
 			}
 #endif /* NGIFLIB_INDEXED_ONLY */
 		}
@@ -367,12 +385,21 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	context.Xtogo = i->width;
 	context.curY = i->posY;
 #ifdef NGIFLIB_INDEXED_ONLY
-	context.frbuff_p.p8 = (u8 *)i->parent->frbuff.p8 + (u32)i->posY*i->parent->width + i->posX;
+	context.frbuff_p.p8 = i->parent->frbuff.p8 + (u32)i->posY*i->parent->width + i->posX;
+	#ifdef NGIFLIB_ENABLE_CALLBACKS
+	context.line_p.p8 = i->parent->frbuff.p8 + (u32)i->posY*i->parent->width;
+	#endif /* NGIFLIB_ENABLE_CALLBACKS */
 #else
 	if(i->parent->mode & NGIFLIB_MODE_INDEXED) {
 		context.frbuff_p.p8 = i->parent->frbuff.p8 + (u32)i->posY*i->parent->width + i->posX;
+		#ifdef NGIFLIB_ENABLE_CALLBACKS
+		context.line_p.p8 = i->parent->frbuff.p8 + (u32)i->posY*i->parent->width;
+		#endif /* NGIFLIB_ENABLE_CALLBACKS */
 	} else {
 		context.frbuff_p.p32 = i->parent->frbuff.p32 + (u32)i->posY*i->parent->width + i->posX;
+		#ifdef NGIFLIB_ENABLE_CALLBACKS
+		context.line_p.p32 = i->parent->frbuff.p32 + (u32)i->posY*i->parent->width;
+		#endif /* NGIFLIB_ENABLE_CALLBACKS */
 	}
 #endif /* NGIFLIB_INDEXED_ONLY */
 
@@ -394,6 +421,9 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			i->palette[k].g = GetByte(i->parent);
 			i->palette[k].b = GetByte(i->parent);
 		}
+#ifdef NGIFLIB_ENABLE_CALLBACKS
+		if(i->parent->palette_cb) i->parent->palette_cb(i->parent, i->palette, localpalsize);
+#endif /* NGIFLIB_ENABLE_CALLBACKS */
 	} else {
 		i->palette = i->parent->palette;
 		i->localpalbits = i->parent->imgbits;
@@ -554,6 +584,9 @@ int LoadGif(struct ngiflib_gif * g) {
 				g->palette[i].b = GetByte(g);
 		/*		printf("%3d %02X %02X %02X\n", i, g->palette[i].r,g->palette[i].g,g->palette[i].b); */
 			}
+#ifdef NGIFLIB_ENABLE_CALLBACKS
+			if(g->palette_cb) g->palette_cb(g, g->palette, g->ncolors);
+#endif /* NGIFLIB_ENABLE_CALLBACKS */
 		} else {
 			g->palette = NULL;
 		}

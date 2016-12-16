@@ -46,6 +46,13 @@ union ngiflib_pixpointer {
 #endif /* NGIFLIB_INDEXED_ONLY */
 };
 
+#ifdef NGIFLIB_ENABLE_CALLBACKS
+struct ngiflib_gif;
+
+typedef void (*ngiflib_palette_cb)(struct ngiflib_gif *, struct ngiflib_rgb *, int);
+typedef void (*ngiflib_line_cb)(struct ngiflib_gif *, union ngiflib_pixpointer, int);
+#endif /* NGIFLIB_ENABLE_CALLBACKS */
+
 /* struct stoquant les parametres relatifs a une image. */
 struct ngiflib_img {
 	struct ngiflib_img * next;
@@ -65,6 +72,9 @@ struct ngiflib_img {
 /* utilises juste pour la decompression */
 struct ngiflib_decode_context {
 	union ngiflib_pixpointer frbuff_p;	/* current offset in frame buffer */
+#ifdef NGIFLIB_ENABLE_CALLBACKS
+	union ngiflib_pixpointer line_p;	/* start of line pointer */
+#endif /* NGIFLIB_ENABLE_CALLBACKS */
 	const u8 * srcbyte;
 	u16 Xtogo;
 	u16 curY;
@@ -117,6 +127,11 @@ struct ngiflib_gif {
 #ifndef NGIFLIB_NO_FILE
 	FILE * log;		/* to output log   */
 #endif /* NGIFLIB_NO_FILE */
+#ifdef NGIFLIB_ENABLE_CALLBACKS
+	ngiflib_palette_cb palette_cb;
+	ngiflib_line_cb line_cb;
+	/* void * priv; */
+#endif /* NGIFLIB_ENABLE_CALLBACKS */
 	int nimg;
 	u16 ncolors;
 	u16 width;

@@ -8,6 +8,7 @@ Contactez moi grace à thomas.bernard8@free.fr si vous voulez utiliser cette
 bibliothèque.
 
 defines :
- DEBUG :                add debug functions
- NGIFLIB_NO_FILE :      remove dependencies to stdio FILE
- NGIFLIB_INDEXED_ONLY : remove code for truecolor output
+ DEBUG :                    add debug functions
+ NGIFLIB_NO_FILE :          remove dependencies to stdio FILE
+ NGIFLIB_INDEXED_ONLY :     remove code for truecolor output
+ NGIFLIB_ENABLE_CALLBACKS : enable palette and line callbacks
