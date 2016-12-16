@@ -582,7 +582,9 @@ int LoadGif(struct ngiflib_gif * g) {
 				g->palette[i].r = GetByte(g);
 				g->palette[i].g = GetByte(g);
 				g->palette[i].b = GetByte(g);
-		/*		printf("%3d %02X %02X %02X\n", i, g->palette[i].r,g->palette[i].g,g->palette[i].b); */
+#if defined(DEBUG) && !defined(NGIFLIB_NO_FILE)
+				if(g->log) fprintf(g->log, "%3d %02X %02X %02X\n", i, g->palette[i].r,g->palette[i].g,g->palette[i].b);
+#endif /* defined(DEBUG) && !defined(NGIFLIB_NO_FILE) */
 			}
 #ifdef NGIFLIB_ENABLE_CALLBACKS
 			if(g->palette_cb) g->palette_cb(g, g->palette, g->ncolors);
