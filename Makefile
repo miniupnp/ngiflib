@@ -42,7 +42,7 @@ check:	gif2tga
 	@err=0 ;\
 	for tga in tmp/*.tga; do \
 		ref="ref/$$(basename $$tga|sed 's/_out01//').gz" ;\
-		gunzip -c $$ref | cmp -b $$tga || { echo "ERROR on $$tga" ; err=1; } ;\
+		gunzip -c $$ref | cmp -l /dev/stdin $$tga || { echo "ERROR on $$tga" ; err=1; } ;\
 	done ;\
 	exit $$err
 		
