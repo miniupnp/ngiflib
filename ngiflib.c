@@ -197,7 +197,7 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 	u16 tocopy;	
 	struct ngiflib_gif * p = i->parent;
 
-	for(; n > 0; n -= tocopy) {
+	while(n > 0) {
 		tocopy = (context->Xtogo < n) ? context->Xtogo : n;
 		if(!p->transparent_flag) {
 #ifndef NGIFLIB_INDEXED_ONLY
@@ -216,7 +216,24 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 			}
 #endif /* NGIFLIB_INDEXED_ONLY */
 		} else {
-			/* TODO */
+			int j;
+#ifndef NGIFLIB_INDEXED_ONLY
+			if(p->mode & NGIFLIB_MODE_INDEXED) {
+#endif /* NGIFLIB_INDEXED_ONLY */
+				for(j = (int)tocopy; j > 0; j--) {
+					if(*pixels != p->transparent_color) *(context->frbuff_p.p8++) = *pixels;
+					pixels++;
+				}
+#ifndef NGIFLIB_INDEXED_ONLY
+			} else {
+				for(j = (int)tocopy; j > 0; j--) {
+					if(*pixels != p->transparent_color) {
+						*(context->frbuff_p.p32++) = GifIndexToTrueColor(i->palette, *pixels);
+					}
+					pixels++;
+				}
+			}
+#endif /* NGIFLIB_INDEXED_ONLY */
 		}
 		context->Xtogo -= tocopy;
 		if(context->Xtogo == 0) {
@@ -273,6 +290,7 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 			}
 #endif /* NGIFLIB_INDEXED_ONLY */
 		}
+		n -= tocopy;
 	}
 }
 
