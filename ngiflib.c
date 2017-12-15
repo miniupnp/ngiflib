@@ -358,7 +358,10 @@ static u16 GetGifWord(struct ngiflib_img * i, struct ngiflib_decode_context * co
 /* ------------------------------------------------ */
 static void FillGifBackGround(struct ngiflib_gif * g) {
 	long n = (long)g->width*g->height;
+#ifndef NGIFLIB_INDEXED_ONLY
 	u32 bg_truecolor;
+#endif /* NGIFLIB_INDEXED_ONLY */
+
 	if((g->frbuff.p8==NULL)||(g->palette==NULL)) return;
 #ifndef NGIFLIB_INDEXED_ONLY
 	if(g->mode & NGIFLIB_MODE_INDEXED) {
