@@ -393,7 +393,7 @@ int CheckGif(u8 * b) {
 /* ------------------------------------------------ */
 static int DecodeGifImg(struct ngiflib_img * i) {
 	struct ngiflib_decode_context context;
-	long npix;
+	/*long npix;*/
 	u8 * stackp;
 	u8 * stack_top;
 	u16 clr;
@@ -442,7 +442,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	}
 #endif /* NGIFLIB_INDEXED_ONLY */
 
-	npix = (long)i->width * i->height;
+	/*npix = (long)i->width * i->height;*/
 	flags = GetByte(i->parent);
 	i->interlaced = (flags & 64) >> 6;
 	context.pass = i->interlaced ? 1 : 0;
@@ -508,12 +508,14 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 #endif /* !defined(NGIFLIB_NO_FILE) */
 			return 0;
 		}
+#if 0
 		if(npix==0) {
 #if !defined(NGIFLIB_NO_FILE)
 			if(i->parent && i->parent->log) fprintf(i->parent->log, "assez de pixels, On se casse !\n");
 #endif /* !defined(NGIFLIB_NO_FILE) */
 			return 1;
 		}	
+#endif
 		if(act_code==clr) {
 #if !defined(NGIFLIB_NO_FILE)
 			if(i->parent && i->parent->log) fprintf(i->parent->log, "Code clear (free=%hu)\n", free);
@@ -522,10 +524,9 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			free = clr + 2;
 			context.nbbit = i->imgbits + 1;
 			context.max = maxsav;
-			act_code = GetGifWord(i, &context);
-			casspecial = (u8)act_code;
-			old_code = act_code;
-			WritePixel(i, &context, casspecial); npix--;
+			old_code = GetGifWord(i, &context);
+			casspecial = old_code;
+			WritePixel(i, &context, casspecial); /*npix--;*/
 		} else {
 			read_byt = act_code;
 			if(act_code >= free) {	/* code pas encore dans alphabet */
@@ -540,7 +541,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 				act_code = ab[act_code].prfx;	/* prefixe */
 			}
 			/* act_code est concret */
-			casspecial = (u8)act_code;	/* dernier debut de chaine ! */
+			casspecial = act_code;	/* dernier debut de chaine ! */
 			*(--stackp) = casspecial;	/* push on stack */
 			WritePixels(i, &context, stackp, stack_top - stackp);	/* unstack all pixels at once */
 			stackp = stack_top;
@@ -551,7 +552,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 				free++;
 				if((free > context.max) && (context.nbbit < 12)) {
 					context.nbbit++;	/* 1 bit de plus pour les codes LZW */
-					context.max += context.max + 1;
+					context.max += (context.max + 1);	/* * 2 + 1 */
 				}
 			}
 			old_code = read_byt;
