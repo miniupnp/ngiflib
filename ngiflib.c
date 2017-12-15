@@ -403,10 +403,8 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	u16 act_code = 0;
 	u16 old_code = 0;
 	u16 read_byt;
-	u16 ab_prfx[4096];
-	u8 ab_suffx[4096];
+	struct { u16 prfx; u8 suffx; } ab[4096];
 	u8 ab_stack[4096];
-	u8 nbbitsav;
 	u8 flags;
 	u8 casspecial = 0;
 
@@ -495,9 +493,8 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	eof = clr + 1;
 	free = clr + 2;
 	freesav = free;
-	nbbitsav = i->imgbits + 1;
-	context.nbbit = nbbitsav;
-	maxsav = (1 << nbbitsav) - 1;
+	context.nbbit = i->imgbits + 1;
+	maxsav = (1 << context.nbbit) - 1;
 	context.max = maxsav;
 	stackp = stack_top = ab_stack + 4096;
 	
@@ -524,7 +521,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 #endif /* !defined(NGIFLIB_NO_FILE) */
 			/* clear */
 			free = freesav;
-			context.nbbit = nbbitsav;
+			context.nbbit = i->imgbits + 1;
 			context.max = maxsav;
 			act_code = GetGifWord(i, &context);
 			casspecial = (u8)act_code;
@@ -540,8 +537,8 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 /*			printf("actcode=%d\n", act_code); */
 			while(act_code > clr) { /* code non concret */
 				/* fillstackloop empile les suffixes ! */
-				*(--stackp) = ab_suffx[act_code];
-				act_code = ab_prfx[act_code];	/* prefixe */
+				*(--stackp) = ab[act_code].suffx;
+				act_code = ab[act_code].prfx;	/* prefixe */
 			}
 			/* act_code est concret */
 			casspecial = (u8)act_code;	/* dernier debut de chaine ! */
@@ -550,8 +547,8 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			stackp = stack_top;
 /*			putchar('\n'); */
 			if(free < 4096) { /* la taille du dico est 4096 max ! */
-				ab_prfx[free] = old_code;
-				ab_suffx[free] = (u8)act_code;
+				ab[free].prfx = old_code;
+				ab[free].suffx = act_code;
 				free++;
 				if((free > context.max) && (context.nbbit < 12)) {
 					context.nbbit++;	/* 1 bit de plus pour les codes LZW */
