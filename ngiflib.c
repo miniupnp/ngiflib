@@ -194,11 +194,19 @@ static void WritePixel(struct ngiflib_img * i, struct ngiflib_decode_context * c
  * ecrit les pixels dans le frame buffer
  */
 static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * context, const u8 * pixels, u16 n) {
-	u16 tocopy;	
 	struct ngiflib_gif * p = i->parent;
 
 	while(n > 0) {
-		tocopy = (context->Xtogo < n) ? context->Xtogo : n;
+		u16 tocopy;
+		if(context->Xtogo < n) {
+			tocopy = context->Xtogo;
+			context->Xtogo = 0;
+			n -= tocopy;
+		} else {
+			tocopy = n;
+			context->Xtogo -= tocopy;
+			n = 0;
+		}
 		if(!p->transparent_flag) {
 #ifndef NGIFLIB_INDEXED_ONLY
 			if(p->mode & NGIFLIB_MODE_INDEXED) {
@@ -208,34 +216,33 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 				context->frbuff_p.p8 += tocopy;
 #ifndef NGIFLIB_INDEXED_ONLY
 			} else {
-				int j;
-				for(j = (int)tocopy; j > 0; j--) {
+				while(tocopy-- > 0) {
 					*(context->frbuff_p.p32++) =
 					   GifIndexToTrueColor(i->palette, *pixels++);
 				}
 			}
 #endif /* NGIFLIB_INDEXED_ONLY */
 		} else {
-			int j;
 #ifndef NGIFLIB_INDEXED_ONLY
 			if(p->mode & NGIFLIB_MODE_INDEXED) {
 #endif /* NGIFLIB_INDEXED_ONLY */
-				for(j = (int)tocopy; j > 0; j--) {
-					if(*pixels != p->transparent_color) *(context->frbuff_p.p8++) = *pixels;
+				while(tocopy-- > 0) {
+					if(*pixels != p->transparent_color) *(context->frbuff_p.p8) = *pixels;
+					context->frbuff_p.p8++;
 					pixels++;
 				}
 #ifndef NGIFLIB_INDEXED_ONLY
 			} else {
-				for(j = (int)tocopy; j > 0; j--) {
+				while(tocopy-- > 0) {
 					if(*pixels != p->transparent_color) {
-						*(context->frbuff_p.p32++) = GifIndexToTrueColor(i->palette, *pixels);
+						*(context->frbuff_p.p32) = GifIndexToTrueColor(i->palette, *pixels);
 					}
+					context->frbuff_p.p32++;
 					pixels++;
 				}
 			}
 #endif /* NGIFLIB_INDEXED_ONLY */
 		}
-		context->Xtogo -= tocopy;
 		if(context->Xtogo == 0) {
 			#ifdef NGIFLIB_ENABLE_CALLBACKS
 			if(p->line_cb) p->line_cb(p, context->line_p, context->curY);
@@ -290,7 +297,6 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 			}
 #endif /* NGIFLIB_INDEXED_ONLY */
 		}
-		n -= tocopy;
 	}
 }
 
