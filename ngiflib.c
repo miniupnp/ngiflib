@@ -194,6 +194,7 @@ static void WritePixel(struct ngiflib_img * i, struct ngiflib_decode_context * c
  * ecrit les pixels dans le frame buffer
  * n is always > 0
  */
+#if 0
 static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * context, const u8 * pixels, u16 n) {
 	struct ngiflib_gif * p = i->parent;
 
@@ -300,6 +301,7 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 		}
 	} while (n > 0);
 }
+#endif
 
 /*
  * u16 GetGifWord(struct ngiflib_img * i);
@@ -394,8 +396,10 @@ int CheckGif(u8 * b) {
 static int DecodeGifImg(struct ngiflib_img * i) {
 	struct ngiflib_decode_context context;
 	/*long npix;*/
+#if 0
 	u8 * stackp;
 	u8 * stack_top;
+#endif
 	u16 clr;
 	u16 eof;
 	u16 free;
@@ -403,8 +407,8 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	u16 act_code = 0;
 	u16 old_code = 0;
 	u16 read_byt;
-	struct { u16 prfx; u8 suffx; } ab[4096];
-	u8 ab_stack[4096];
+	struct { u16 prfx; u8 suffx; u8 len; } ab[4096];
+	/*u8 ab_stack[4096];*/
 	u8 flags;
 	u8 casspecial = 0;
 
@@ -495,7 +499,11 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	context.nbbit = i->imgbits + 1;
 	maxsav = (1 << context.nbbit) - 1;
 	context.max = maxsav;
-	stackp = stack_top = ab_stack + 4096;
+	/*stackp = stack_top = ab_stack + 4096;*/
+	/* initialize length */
+	for(act_code = 0; act_code < clr; act_code++) {
+		ab[act_code].len = 1;
+	}
 	
 	context.restbits = 0;	/* initialise le "buffer" de lecture */
 	context.restbyte = 0;	/* des codes LZW */
@@ -531,10 +539,11 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			read_byt = act_code;
 			if(act_code >= free) {	/* code pas encore dans alphabet */
 /*				printf("Code pas dans alphabet : %d>=%d push %d\n", act_code, free, casspecial); */
-				*(--stackp) = casspecial; /* dernier debut de chaine ! */
+				/* *(--stackp) = casspecial;*/ /* dernier debut de chaine ! */
 				act_code = old_code;
 			}
 /*			printf("actcode=%d\n", act_code); */
+#if 0
 			while(act_code > clr) { /* code non concret */
 				/* fillstackloop empile les suffixes ! */
 				*(--stackp) = ab[act_code].suffx;
@@ -545,10 +554,42 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			*(--stackp) = casspecial;	/* push on stack */
 			WritePixels(i, &context, stackp, stack_top - stackp);	/* unstack all pixels at once */
 			stackp = stack_top;
+#endif
+			if(i->parent->mode & NGIFLIB_MODE_INDEXED) {
+				u8 * dest = context.frbuff_p.p8 + ab[act_code].len;
+				context.frbuff_p.p8 = dest;
+				while(act_code > clr) { /* code non concret */
+					/* fillstackloop empile les suffixes ! */
+					*(--dest) = ab[act_code].suffx;
+					act_code = ab[act_code].prfx;	/* prefixe */
+				}
+				/* act_code est concret */
+				*(--dest) = act_code;	/* push on stack */
+				if(read_byt >= free) {
+					*(context.frbuff_p.p8++) = casspecial;
+				}
+				casspecial = act_code;	/* dernier debut de chaine ! */
+			} else {
+				u32 * dest = context.frbuff_p.p32 + ab[act_code].len;
+				context.frbuff_p.p32 = dest;
+				while(act_code > clr) { /* code non concret */
+					/* fillstackloop empile les suffixes ! */
+					*(--dest) = GifIndexToTrueColor(i->palette, ab[act_code].suffx);
+					act_code = ab[act_code].prfx;	/* prefixe */
+				}
+				/* act_code est concret */
+				*(--dest) = GifIndexToTrueColor(i->palette, act_code);
+				if(read_byt >= free) {
+					*(context.frbuff_p.p32++) = GifIndexToTrueColor(i->palette, casspecial);
+				}
+				casspecial = act_code;	/* dernier debut de chaine ! */
+			}
 /*			putchar('\n'); */
 			if(free < 4096) { /* la taille du dico est 4096 max ! */
 				ab[free].prfx = old_code;
 				ab[free].suffx = act_code;
+				ab[free].len = ab[old_code].len + 1;
+				if(ab[old_code].len == 255) printf("ab[%d].len == 255\n", old_code);
 				free++;
 				if((free > context.max) && (context.nbbit < 12)) {
 					context.nbbit++;	/* 1 bit de plus pour les codes LZW */
