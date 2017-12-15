@@ -69,9 +69,15 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 	}
 	for(i=0; i<gif->ncolors; i++)
 	{
+#ifdef NGIFLIB_PALETTE_USE_BYTES
+		surface->format->palette->colors[i].r = gif->palette[i*3];
+		surface->format->palette->colors[i].g = gif->palette[i*3+1];
+		surface->format->palette->colors[i].b = gif->palette[i*3+2];
+#else
 		surface->format->palette->colors[i].r = gif->palette[i].r;
 		surface->format->palette->colors[i].g = gif->palette[i].g;
 		surface->format->palette->colors[i].b = gif->palette[i].b;
+#endif /* NGIFLIB_PALETTE_USE_BYTES */
 	}
 	psrc = p; pdst = surface->pixels;
 	for(i=0; i<gif->height; i++)

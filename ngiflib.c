@@ -445,17 +445,24 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	i->sort_flag = (flags & 32) >> 5;	/* is local palette sorted by color frequency ? */
 	i->localpalbits = (flags & 7) + 1;
 	if(flags&128) { /* palette locale */
+#ifndef NGIFLIB_PALETTE_USE_BYTES
 		int k;
+#endif /* NGIFLIB_PALETTE_USE_BYTES */
 		int localpalsize = 1 << i->localpalbits;
 #if !defined(NGIFLIB_NO_FILE)
 		if(i->parent && i->parent->log) fprintf(i->parent->log, "Local palette\n");
 #endif /* !defined(NGIFLIB_NO_FILE) */
+#ifdef NGIFLIB_PALETTE_USE_BYTES
+		i->palette = ngiflib_malloc(3*localpalsize);
+		GetByteStr(i->parent, i->palette, 3*localpalsize);
+#else
 		i->palette = (struct ngiflib_rgb *)ngiflib_malloc(sizeof(struct ngiflib_rgb)*localpalsize);
 		for(k=0; k<localpalsize; k++) {
 			i->palette[k].r = GetByte(i->parent);
 			i->palette[k].g = GetByte(i->parent);
 			i->palette[k].b = GetByte(i->parent);
 		}
+#endif
 #ifdef NGIFLIB_ENABLE_CALLBACKS
 		if(i->parent->palette_cb) i->parent->palette_cb(i->parent, i->palette, localpalsize);
 #endif /* NGIFLIB_ENABLE_CALLBACKS */
@@ -612,6 +619,10 @@ int LoadGif(struct ngiflib_gif * g) {
 
 		if(tmp&0x80) {
 			/* la palette globale suit. */
+#ifdef NGIFLIB_PALETTE_USE_BYTES
+			g->palette = ngiflib_malloc(3*g->ncolors);
+			GetByteStr(g, g->palette, 3*g->ncolors);
+#else /* not NGIFLIB_PALETTE_USE_BYTES */
 			g->palette = (struct ngiflib_rgb *)ngiflib_malloc(sizeof(struct ngiflib_rgb)*g->ncolors);
 			for(i=0; i<g->ncolors; i++) {
 				g->palette[i].r = GetByte(g);
@@ -621,6 +632,7 @@ int LoadGif(struct ngiflib_gif * g) {
 				if(g->log) fprintf(g->log, "%3d %02X %02X %02X\n", i, g->palette[i].r,g->palette[i].g,g->palette[i].b);
 #endif /* defined(DEBUG) && !defined(NGIFLIB_NO_FILE) */
 			}
+#endif /* NGIFLIB_PALETTE_USE_BYTES */
 #ifdef NGIFLIB_ENABLE_CALLBACKS
 			if(g->palette_cb) g->palette_cb(g, g->palette, g->ncolors);
 #endif /* NGIFLIB_ENABLE_CALLBACKS */
@@ -750,6 +762,13 @@ int LoadGif(struct ngiflib_gif * g) {
 	}
 }
 
+#ifdef NGIFLIB_PALETTE_USE_BYTES
+u32 GifIndexToTrueColor(const u8 * palette, u8 v) {
+	/*               BLUE |          (GREEN << 8) |            (RED << 16) */
+	return palette[3*v+2] | (palette[3*v+1] << 8) | (palette[3*v+0] << 16);
+}
+#else
 u32 GifIndexToTrueColor(struct ngiflib_rgb * palette, u8 v) {
 	return palette[v].b | (palette[v].g << 8) | (palette[v].r << 16);
 }
+#endif /* NGIFLIB_PALETTE_USE_BYTES */

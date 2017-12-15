@@ -138,9 +138,15 @@ int main(int argc, char * * argv) {
 			putc(8, ftga);	/* bits per pixel */
 			putc(32, ftga);	/* top down       */
 			for(i=0; i<localpalsize; i++) {
+#ifdef NGIFLIB_PALETTE_USE_BYTES
+				putc(img->palette[i*3+2], ftga);
+				putc(img->palette[i*3+1], ftga);
+				putc(img->palette[i*3+0], ftga);
+#else
 				putc(img->palette[i].b, ftga);
 				putc(img->palette[i].g, ftga);
 				putc(img->palette[i].r, ftga);
+#endif /* NGIFLIB_PALETTE_USE_BYTES */
 			}
 			fwrite(gif->frbuff.p8, 1,
 			      (size_t)gif->width * (size_t)gif->height, ftga);

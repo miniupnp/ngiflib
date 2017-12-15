@@ -34,10 +34,15 @@ typedef uint32_t u32;
 #define NGIFLIB_MODE_FROM_MEM	(0x02)
 
 /* palette element */
+#define NGIFLIB_PALETTE_USE_BYTES
+#ifdef NGIFLIB_PALETTE_USE_BYTES
+u32 GifIndexToTrueColor(const u8 * palette, u8 v);
+#else
 struct ngiflib_rgb {
 	u8 r, g ,b;
 };
 u32 GifIndexToTrueColor(struct ngiflib_rgb * palette, u8 v);
+#endif /* NGIFLIB_PALETTE_USE_BYTES */
 
 union ngiflib_pixpointer {
 	u8 * p8;
@@ -49,7 +54,11 @@ union ngiflib_pixpointer {
 #ifdef NGIFLIB_ENABLE_CALLBACKS
 struct ngiflib_gif;
 
+#ifdef NGIFLIB_PALETTE_USE_BYTES
+typedef void (*ngiflib_palette_cb)(struct ngiflib_gif *, const u8 *, int);
+#else
 typedef void (*ngiflib_palette_cb)(struct ngiflib_gif *, struct ngiflib_rgb *, int);
+#endif /* NGIFLIB_PALETTE_USE_BYTES */
 typedef void (*ngiflib_line_cb)(struct ngiflib_gif *, union ngiflib_pixpointer, int);
 #endif /* NGIFLIB_ENABLE_CALLBACKS */
 
@@ -57,7 +66,11 @@ typedef void (*ngiflib_line_cb)(struct ngiflib_gif *, union ngiflib_pixpointer, 
 struct ngiflib_img {
 	struct ngiflib_img * next;
 	struct ngiflib_gif * parent;
+#ifdef NGIFLIB_PALETTE_USE_BYTES
+	u8 * palette;
+#else
 	struct ngiflib_rgb * palette;
+#endif /* NGIFLIB_PALETTE_USE_BYTES */
 	u16 ncolors;
 	u16 width;
 	u16 height;
@@ -116,7 +129,11 @@ void fprintf_ngiflib_img(FILE * f, struct ngiflib_img * i);
 struct ngiflib_gif {
 	struct ngiflib_img * first_img;
 	struct ngiflib_img * cur_img;
+#ifdef NGIFLIB_PALETTE_USE_BYTES
+	u8 * palette;
+#else
 	struct ngiflib_rgb * palette;
+#endif /* NGIFLIB_PALETTE_USE_BYTES */
 	union {
 #ifndef NGIFLIB_NO_FILE
 		FILE * file;
