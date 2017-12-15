@@ -192,11 +192,12 @@ static void WritePixel(struct ngiflib_img * i, struct ngiflib_decode_context * c
 
 /* void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n);
  * ecrit les pixels dans le frame buffer
+ * n is always > 0
  */
 static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * context, const u8 * pixels, u16 n) {
 	struct ngiflib_gif * p = i->parent;
 
-	while(n > 0) {
+	do {
 		u16 tocopy;
 		if(context->Xtogo < n) {
 			tocopy = context->Xtogo;
@@ -297,7 +298,7 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 			}
 #endif /* NGIFLIB_INDEXED_ONLY */
 		}
-	}
+	} while (n > 0);
 }
 
 /*
