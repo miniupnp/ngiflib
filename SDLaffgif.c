@@ -86,6 +86,8 @@ int main(int argc, char* * argv) {
 	int bpp;
 	SDL_Surface * screen;
 	char * gifname;
+	struct ngiflibSDL_animation * animation;
+	int i;
 	
 	if(argc>1)
 		gifname = argv[1];
@@ -104,7 +106,6 @@ int main(int argc, char* * argv) {
 		printf("All resolutions available.\n");
 	} else {
 		/* Print valid modes */
-		int i;
 		printf("Available Modes\n");
 		for(i=0;modes[i];++i) {
 			printf("  %d x %d\n", modes[i]->w, modes[i]->h);
@@ -119,11 +120,47 @@ int main(int argc, char* * argv) {
 	}
 	printf("SDL Recommends 640x480@%dbpp.\n", bpp);
 	screen = SDL_SetVideoMode(640, 480, bpp, SDL_HWSURFACE | SDL_DOUBLEBUF);
+#if 0
+	/* code to display single image : */
 	ShowGIF(gifname, screen, 0,0);
 	SDL_Flip(screen);
 
 	for(;;) {
 		manage_event();
+	}
+#endif
+
+	animation = SDL_LoadAnimatedGif(gifname);
+	printf("SDL_LoadAnimatedGif(%s) => %p\n", gifname, animation);
+	if(animation != NULL) {
+		printf("%d images\n", animation->image_count);
+		for(;;)
+		for(i = 0; i < animation->image_count; i++) {
+			SDL_Event event;
+			SDL_Rect dest;
+			/* Copie à l'écran.
+			   La surface ne doit pas être bloquée maintenant
+			 */
+			dest.x = 0;
+			dest.y = 0;
+			dest.w = animation->images[i].surface->w;
+			dest.h = animation->images[i].surface->h;
+			SDL_BlitSurface(animation->images[i].surface, NULL, screen, &dest);
+
+			/*Mise à jour de la portion qui a changé */
+			SDL_UpdateRects(screen, 1, &dest);
+			SDL_Flip(screen);
+			SDL_Delay(10*animation->images[i].delay_time);
+			while(SDL_PollEvent(&event)) {
+				if(event.type == SDL_QUIT) {
+					printf("SDL_QUIT\n");
+					exit(0);
+				} else if(event.type == SDL_KEYDOWN) {
+					printf("Touche %s _\n", SDL_GetKeyName(event.key.keysym.sym));
+					if(event.key.keysym.sym == SDLK_ESCAPE) exit(0);
+				}
+			}
+		}
 	}
 	return 0;
 }
