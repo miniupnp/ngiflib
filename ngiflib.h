@@ -89,7 +89,7 @@ struct ngiflib_decode_context {
 	union ngiflib_pixpointer line_p;	/* start of line pointer */
 #endif /* NGIFLIB_ENABLE_CALLBACKS */
 	const u8 * srcbyte;
-	u16 Xtogo;
+	int Xtogo;
 	u16 curY;
 	u16 lbyte;
 	u16 max;	/* maximum value = (1 << nbbit) - 1 */

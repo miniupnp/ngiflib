@@ -107,201 +107,43 @@ static void /*int*/ GetByteStr(struct ngiflib_gif * g, u8 * p, int n) {
 #endif /* NGIFLIB_NO_FILE */
 }
 
-/* void WritePixel(struct ngiflib_img * i, u8 v);
- * ecrit le pixel de valeur v dans le frame buffer
- */
-static void WritePixel(struct ngiflib_img * i, struct ngiflib_decode_context * context, u8 v) {
+static void AdjustLine(struct ngiflib_img * i, struct ngiflib_decode_context * context) {
 	struct ngiflib_gif * p = i->parent;
 
-	if(v!=p->transparent_color || !p->transparent_flag) {
-#ifndef NGIFLIB_INDEXED_ONLY
-		if(p->mode & NGIFLIB_MODE_INDEXED) {
-#endif /* NGIFLIB_INDEXED_ONLY */
-			*context->frbuff_p.p8 = v;
-#ifndef NGIFLIB_INDEXED_ONLY
-		} else
-			*context->frbuff_p.p32 =
-			   GifIndexToTrueColor(i->palette, v);
-#endif /* NGIFLIB_INDEXED_ONLY */
-	}
-	if(--(context->Xtogo) <= 0) {
-		#ifdef NGIFLIB_ENABLE_CALLBACKS
-		if(p->line_cb) p->line_cb(p, context->line_p, context->curY);
-		#endif /* NGIFLIB_ENABLE_CALLBACKS */
-		context->Xtogo = i->width;
-		switch(context->pass) {
-		case 0:
-			context->curY++;
-			break;
-		case 1:	/* 1st pass : every eighth row starting from 0 */
-			context->curY += 8;
-			if(context->curY >= p->height) {
-				context->pass++;
-				context->curY = i->posY + 4;
-			}
-			break;
-		case 2:	/* 2nd pass : every eighth row starting from 4 */
-			context->curY += 8;
-			if(context->curY >= p->height) {
-				context->pass++;
-				context->curY = i->posY + 2;
-			}
-			break;
-		case 3:	/* 3rd pass : every fourth row starting from 2 */
-			context->curY += 4;
-			if(context->curY >= p->height) {
-				context->pass++;
-				context->curY = i->posY + 1;
-			}
-			break;
-		case 4:	/* 4th pass : every odd row */
-			context->curY += 2;
-			break;
+#ifdef NGIFLIB_ENABLE_CALLBACKS
+	if(p->line_cb) p->line_cb(p, context->line_p, context->curY);
+	context->line_p.p8 += i->width; /* !!! */
+#endif /* NGIFLIB_ENABLE_CALLBACKS */
+	switch(context->pass) {
+	case 0:
+		context->curY++;
+		break;
+	case 1:	/* 1st pass : every eighth row starting from 0 */
+		context->curY += 8;
+		if(context->curY >= p->height) {
+			context->pass++;
+			context->curY = i->posY + 4;
 		}
-#ifndef NGIFLIB_INDEXED_ONLY
-		if(p->mode & NGIFLIB_MODE_INDEXED) {
-#endif /* NGIFLIB_INDEXED_ONLY */
-			#ifdef NGIFLIB_ENABLE_CALLBACKS
-			context->line_p.p8 = p->frbuff.p8 + (u32)context->curY*p->width;
-			context->frbuff_p.p8 = context->line_p.p8 + i->posX;
-			#else
-			context->frbuff_p.p8 = p->frbuff.p8 + (u32)context->curY*p->width + i->posX;
-			#endif /* NGIFLIB_ENABLE_CALLBACKS */
-#ifndef NGIFLIB_INDEXED_ONLY
-		} else {
-			#ifdef NGIFLIB_ENABLE_CALLBACKS
-			context->line_p.p32 = p->frbuff.p32 + (u32)context->curY*p->width;
-			context->frbuff_p.p32 = context->line_p.p32 + i->posX;
-			#else
-			context->frbuff_p.p32 = p->frbuff.p32 + (u32)context->curY*p->width + i->posX;
-			#endif /* NGIFLIB_ENABLE_CALLBACKS */
+		break;
+	case 2:	/* 2nd pass : every eighth row starting from 4 */
+		context->curY += 8;
+		if(context->curY >= p->height) {
+			context->pass++;
+			context->curY = i->posY + 2;
 		}
-#endif /* NGIFLIB_INDEXED_ONLY */
-	} else {
-#ifndef NGIFLIB_INDEXED_ONLY
-		if(p->mode & NGIFLIB_MODE_INDEXED) {
-#endif /* NGIFLIB_INDEXED_ONLY */
-			context->frbuff_p.p8++;
-#ifndef NGIFLIB_INDEXED_ONLY
-		} else {
-			context->frbuff_p.p32++;
+		break;
+	case 3:	/* 3rd pass : every fourth row starting from 2 */
+		context->curY += 4;
+		if(context->curY >= p->height) {
+			context->pass++;
+			context->curY = i->posY + 1;
 		}
-#endif /* NGIFLIB_INDEXED_ONLY */
+		break;
+	case 4:	/* 4th pass : every odd row */
+		context->curY += 2;
+		break;
 	}
 }
-
-/* void WritePixels(struct ngiflib_img * i, const u8 * pixels, u16 n);
- * ecrit les pixels dans le frame buffer
- * n is always > 0
- */
-#if 0
-static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * context, const u8 * pixels, u16 n) {
-	struct ngiflib_gif * p = i->parent;
-
-	do {
-		u16 tocopy;
-		if(context->Xtogo < n) {
-			tocopy = context->Xtogo;
-			context->Xtogo = 0;
-			n -= tocopy;
-		} else {
-			tocopy = n;
-			context->Xtogo -= tocopy;
-			n = 0;
-		}
-		if(!p->transparent_flag) {
-#ifndef NGIFLIB_INDEXED_ONLY
-			if(p->mode & NGIFLIB_MODE_INDEXED) {
-#endif /* NGIFLIB_INDEXED_ONLY */
-				ngiflib_memcpy(context->frbuff_p.p8, pixels, tocopy);
-				pixels += tocopy;
-				context->frbuff_p.p8 += tocopy;
-#ifndef NGIFLIB_INDEXED_ONLY
-			} else {
-				while(tocopy-- > 0) {
-					*(context->frbuff_p.p32++) =
-					   GifIndexToTrueColor(i->palette, *pixels++);
-				}
-			}
-#endif /* NGIFLIB_INDEXED_ONLY */
-		} else {
-#ifndef NGIFLIB_INDEXED_ONLY
-			if(p->mode & NGIFLIB_MODE_INDEXED) {
-#endif /* NGIFLIB_INDEXED_ONLY */
-				while(tocopy-- > 0) {
-					if(*pixels != p->transparent_color) *(context->frbuff_p.p8) = *pixels;
-					context->frbuff_p.p8++;
-					pixels++;
-				}
-#ifndef NGIFLIB_INDEXED_ONLY
-			} else {
-				while(tocopy-- > 0) {
-					if(*pixels != p->transparent_color) {
-						*(context->frbuff_p.p32) = GifIndexToTrueColor(i->palette, *pixels);
-					}
-					context->frbuff_p.p32++;
-					pixels++;
-				}
-			}
-#endif /* NGIFLIB_INDEXED_ONLY */
-		}
-		if(context->Xtogo == 0) {
-			#ifdef NGIFLIB_ENABLE_CALLBACKS
-			if(p->line_cb) p->line_cb(p, context->line_p, context->curY);
-			#endif /* NGIFLIB_ENABLE_CALLBACKS */
-			context->Xtogo = i->width;
-			switch(context->pass) {
-			case 0:
-				context->curY++;
-				break;
-			case 1:	/* 1st pass : every eighth row starting from 0 */
-				context->curY += 8;
-				if(context->curY >= p->height) {
-					context->pass++;
-					context->curY = i->posY + 4;
-				}
-				break;
-			case 2:	/* 2nd pass : every eighth row starting from 4 */
-				context->curY += 8;
-				if(context->curY >= p->height) {
-					context->pass++;
-					context->curY = i->posY + 2;
-				}
-				break;
-			case 3:	/* 3rd pass : every fourth row starting from 2 */
-				context->curY += 4;
-				if(context->curY >= p->height) {
-					context->pass++;
-					context->curY = i->posY + 1;
-				}
-				break;
-			case 4:	/* 4th pass : every odd row */
-				context->curY += 2;
-				break;
-			}
-#ifndef NGIFLIB_INDEXED_ONLY
-			if(p->mode & NGIFLIB_MODE_INDEXED) {
-#endif /* NGIFLIB_INDEXED_ONLY */
-				#ifdef NGIFLIB_ENABLE_CALLBACKS
-				context->line_p.p8 = p->frbuff.p8 + (u32)context->curY*p->width;
-				context->frbuff_p.p8 = context->line_p.p8 + i->posX;
-				#else
-				context->frbuff_p.p8 = p->frbuff.p8 + (u32)context->curY*p->width + i->posX;
-				#endif /* NGIFLIB_ENABLE_CALLBACKS */
-#ifndef NGIFLIB_INDEXED_ONLY
-			} else {
-				#ifdef NGIFLIB_ENABLE_CALLBACKS
-				context->line_p.p32 = p->frbuff.p32 + (u32)context->curY*p->width;
-				context->frbuff_p.p32 = context->line_p.p32 + i->posX;
-				#else
-				context->frbuff_p.p32 = p->frbuff.p32 + (u32)context->curY*p->width + i->posX;
-				#endif /* NGIFLIB_ENABLE_CALLBACKS */
-			}
-#endif /* NGIFLIB_INDEXED_ONLY */
-		}
-	} while (n > 0);
-}
-#endif
 
 /*
  * u16 GetGifWord(struct ngiflib_img * i);
@@ -534,7 +376,15 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			context.max = maxsav;
 			old_code = GetGifWord(i, &context);
 			casspecial = old_code;
-			WritePixel(i, &context, casspecial); /*npix--;*/
+			/*WritePixel(i, &context, casspecial);*/ /*npix--;*/
+			if(casspecial != i->parent->transparent_color || !i->parent->transparent_flag) {
+				*context.frbuff_p.p8 = casspecial;
+			}
+			context.frbuff_p.p8++;
+			if(--(context.Xtogo) <= 0) {
+				context.Xtogo = i->width;
+				AdjustLine(i, &context);
+			}
 		} else {
 			read_byt = act_code;
 			if(act_code >= free) {	/* code pas encore dans alphabet */
@@ -555,8 +405,14 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			WritePixels(i, &context, stackp, stack_top - stackp);	/* unstack all pixels at once */
 			stackp = stack_top;
 #endif
-			if(i->parent->mode & NGIFLIB_MODE_INDEXED) {
-				u8 * dest = context.frbuff_p.p8 + ab[act_code].len;
+#ifndef NGIFLIB_INDEXED_ONLY
+			if(i->parent->mode & NGIFLIB_MODE_INDEXED)
+#endif
+			{
+				u8 * dest;
+				int len;
+				len = ab[act_code].len;
+				dest = context.frbuff_p.p8 + len;
 				context.frbuff_p.p8 = dest;
 				while(act_code > clr) { /* code non concret */
 					/* fillstackloop empile les suffixes ! */
@@ -564,11 +420,16 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 					act_code = ab[act_code].prfx;	/* prefixe */
 				}
 				/* act_code est concret */
-				*(--dest) = act_code;	/* push on stack */
+				*(--dest) = act_code;
 				if(read_byt >= free) {
 					*(context.frbuff_p.p8++) = casspecial;
+					len++;
 				}
 				casspecial = act_code;	/* dernier debut de chaine ! */
+				for(context.Xtogo -= len; context.Xtogo <= 0; context.Xtogo += i->width) {
+					AdjustLine(i, &context);
+				}
+#ifndef NGIFLIB_INDEXED_ONLY
 			} else {
 				u32 * dest = context.frbuff_p.p32 + ab[act_code].len;
 				context.frbuff_p.p32 = dest;
@@ -583,13 +444,14 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 					*(context.frbuff_p.p32++) = GifIndexToTrueColor(i->palette, casspecial);
 				}
 				casspecial = act_code;	/* dernier debut de chaine ! */
+#endif
 			}
 /*			putchar('\n'); */
 			if(free < 4096) { /* la taille du dico est 4096 max ! */
 				ab[free].prfx = old_code;
 				ab[free].suffx = act_code;
 				ab[free].len = ab[old_code].len + 1;
-				if(ab[old_code].len == 255) printf("ab[%d].len == 255\n", old_code);
+				if(ab[old_code].len == 255) printf("ab[%d].len == 255\n", (int)old_code);
 				free++;
 				if((free > context.max) && (context.nbbit < 12)) {
 					context.nbbit++;	/* 1 bit de plus pour les codes LZW */
