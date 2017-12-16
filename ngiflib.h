@@ -136,11 +136,11 @@ struct ngiflib_gif {
 	u16 ncolors;
 	u16 width;
 	u16 height;
-	u16 delay_time;
+	u16 delay_time;	/* 1/100 of seconds or 0 */
 	u8 backgroundindex;
 	u8 pixaspectratio;	/* width/height = (pixaspectratio + 15) / 64 */
-	u8 disp_method;
-	u8 userinputflag;
+	u8 disp_method;	/* see above */
+	u8 userinputflag;	/* User input is : 0 = not expected. 1 = expected. */
 	u8 transparent_color;
 	u8 transparent_flag;
 	u8 imgbits;

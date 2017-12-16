@@ -656,6 +656,8 @@ int LoadGif(struct ngiflib_gif * g) {
 
 				switch(id) {
 				case 0xF9:	/* Graphic Control Extension */
+					/* The scope of this extension is the first graphic
+					 * rendering block to follow. */
 					g->disp_method = (ext[0] >> 2) & 7;
 					g->transparent_flag = ext[0] & 1;
 					g->userinputflag = (ext[0] >> 1) & 1;
@@ -665,7 +667,9 @@ int LoadGif(struct ngiflib_gif * g) {
 					if(g->log) fprintf(g->log, "disp_method=%hhu delay_time=%hu (transp=%hhu)transparent_color=0x%02hhX\n",
 					       g->disp_method, g->delay_time, g->transparent_flag, g->transparent_color);
 #endif /* NGIFLIB_INDEXED_ONLY */
-					if(g->transparent_flag) FillGifBackGround(g);
+					/* this propably should be adjusted depending on the disp_method
+					 * of the previous image */
+					if(g->transparent_flag && (g->nimg == 0)) FillGifBackGround(g);
 					break;
 				case 0xFE:	/* Comment Extension. */
 #if !defined(NGIFLIB_NO_FILE)
