@@ -3,6 +3,8 @@
 #include "ngiflib.h"
 #include "ngiflibSDL.h"
 
+/* define NGIFLIBSDL_LOG to log to stdout */
+
 /* SDL_LoadGIF a le meme comportement que SDL_LoadBMP */
 SDL_Surface * SDL_LoadGIF(const char * file)
 {
@@ -39,6 +41,9 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 	gif->input.file = fgif;
 	/*gif->mode = NGIFLIB_MODE_FROM_FILE | NGIFLIB_MODE_TRUE_COLOR; */
 	gif->mode = NGIFLIB_MODE_FROM_FILE | NGIFLIB_MODE_INDEXED;
+#ifdef NGIFLIBSDL_LOG
+	gif->log = stdout;
+#endif /* NGIFLIBSDL_LOG */
 #endif /* NGIFLIB_NO_FILE */
 	err = LoadGif(gif);
 	fclose(fgif);

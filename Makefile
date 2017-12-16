@@ -3,6 +3,7 @@ CFLAGS?=-O -Wall
 CFLAGS+=-Wextra
 CFLAGS+=-g
 #CFLAGS+=-DDEBUG
+CFLAGS+=-DNGIFLIBSDL_LOG
 CFLAGS+=$(shell pkg-config sdl --cflags)
 LDFLAGS=$(shell pkg-config sdl --libs-only-L)
 LDLIBS=$(shell pkg-config sdl --libs-only-l)

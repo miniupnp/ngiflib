@@ -12,3 +12,4 @@ defines :
  NGIFLIB_NO_FILE :          remove dependencies to stdio FILE
  NGIFLIB_INDEXED_ONLY :     remove code for truecolor output
  NGIFLIB_ENABLE_CALLBACKS : enable palette and line callbacks
+ DNGIFLIBSDL_LOG :          enable log to stdout in ngiflibSDL.c

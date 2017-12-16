@@ -42,6 +42,8 @@ void manage_event() {
 			printf("Bouton %d ^\n", event.button.button);
 			if(event.button.button == 1) exit(0);
 			break;
+		case SDL_MOUSEMOTION:
+			break;
 		default:
 			printf("event.type = %d\n", event.type);
 		}
