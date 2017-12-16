@@ -4,9 +4,9 @@
 
 #include "ngiflib.h"
 
-/* decodeur GIF en C portable (pas de pb big/little endian
+/* decodeur GIF en C portable (pas de pb big/little endian)
  * Thomas BERNARD. janvier 2004.
- * (c) 2004-2016 Thomas Bernard. All rights reserved
+ * (c) 2004-2017 Thomas Bernard. All rights reserved
  */
 
 /* Fonction de debug */
