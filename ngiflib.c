@@ -221,16 +221,18 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 			if(p->mode & NGIFLIB_MODE_INDEXED) {
 #endif /* NGIFLIB_INDEXED_ONLY */
 				for(j = (int)tocopy; j > 0; j--) {
-					if(*pixels != p->transparent_color) *(context->frbuff_p.p8++) = *pixels;
+					if(*pixels != p->transparent_color) *context->frbuff_p.p8 = *pixels;
 					pixels++;
+					context->frbuff_p.p8++;
 				}
 #ifndef NGIFLIB_INDEXED_ONLY
 			} else {
 				for(j = (int)tocopy; j > 0; j--) {
 					if(*pixels != p->transparent_color) {
-						*(context->frbuff_p.p32++) = GifIndexToTrueColor(i->palette, *pixels);
+						*context->frbuff_p.p32 = GifIndexToTrueColor(i->palette, *pixels);
 					}
 					pixels++;
+					context->frbuff_p.p32++;
 				}
 			}
 #endif /* NGIFLIB_INDEXED_ONLY */
