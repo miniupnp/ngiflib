@@ -36,8 +36,7 @@ check:	gif2tga
 	mkdir -p tmp
 	@for gif in $(REFIMGS); do \
 		base=$$(basename $$gif .gif) ;\
-		./gif2tga --indexed --outbase tmp/$${base}_indexed samples/$${base}.gif && \
-		./gif2tga --outbase tmp/$${base}_truecolor samples/$${base}.gif ;\
+		./gif2tga --indexed --outbase tmp/$${base}_indexed samples/$${base}.gif ;\
 	done
 	@err=0 ;\
 	for tga in tmp/*.tga; do \
