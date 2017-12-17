@@ -353,8 +353,8 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	context.restbyte = 0;	/* des codes LZW */
 	context.lbyte = 0;
 	for(;;) {
-		act_code = GetGifWord(i, &context);
-		if(act_code==eof) {
+		read_byt = GetGifWord(i, &context);
+		if(read_byt == eof) {
 #if !defined(NGIFLIB_NO_FILE)
 			if(i->parent && i->parent->log) fprintf(i->parent->log, "End of image code\n");
 #endif /* !defined(NGIFLIB_NO_FILE) */
@@ -368,7 +368,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			return 1;
 		}	
 #endif
-		if(act_code==clr) {
+		if(read_byt == clr) {
 #if !defined(NGIFLIB_NO_FILE)
 			if(i->parent && i->parent->log) fprintf(i->parent->log, "Code clear (free=%hu)\n", free);
 #endif /* !defined(NGIFLIB_NO_FILE) */
@@ -389,11 +389,12 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 				AdjustLine(i, &context);
 			}
 		} else {
-			read_byt = act_code;
-			if(act_code >= free) {	/* code pas encore dans alphabet */
+			if(read_byt >= free) {	/* code pas encore dans alphabet */
 /*				printf("Code pas dans alphabet : %d>=%d push %d\n", act_code, free, casspecial); */
 				/* *(--stackp) = casspecial;*/ /* dernier debut de chaine ! */
 				act_code = old_code;
+			} else {
+				act_code = read_byt;
 			}
 /*			printf("actcode=%d\n", act_code); */
 #if 0
@@ -452,8 +453,9 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 				*(--dest) = act_code;
 				if(read_byt >= free) {
 					*(context.frbuff_p.p8++) = casspecial;
-					if(context.Xtogo == len)
+					if(context.Xtogo == len) {
 						context.frbuff_p.p8 += stride;
+					}
 					len++;
 				}
 				casspecial = act_code;	/* dernier debut de chaine ! */
@@ -484,7 +486,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 				ab[free].prfx = old_code;
 				ab[free].suffx = act_code;
 				ab[free].len = ab[old_code].len + 1;
-				if(ab[old_code].len == 255) printf("ab[%d].len == 255\n", (int)old_code);
+				/*if(ab[old_code].len == 255) printf("ab[%d].len == 255\n", (int)old_code);*/
 				free++;
 				if((free > context.max) && (context.nbbit < 12)) {
 					context.nbbit++;	/* 1 bit de plus pour les codes LZW */
