@@ -242,6 +242,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	u8 * stackp;
 	u8 * stack_top;
 #endif
+	int stride;
 	u16 clr;
 	u16 eof;
 	u16 free;
@@ -260,6 +261,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	i->posY = GetWord(i->parent);	/* offsetY */
 	i->width = GetWord(i->parent);	/* SizeX   */
 	i->height = GetWord(i->parent);	/* SizeY   */
+	stride = (i->parent->width - i->width);
 
 	context.Xtogo = i->width;
 	context.curY = i->posY;
@@ -383,7 +385,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			context.frbuff_p.p8++;
 			if(--(context.Xtogo) <= 0) {
 				context.Xtogo = i->width;
-				context.frbuff_p.p8 += (i->parent->width - i->width);
+				context.frbuff_p.p8 += stride;
 				AdjustLine(i, &context);
 			}
 		} else {
@@ -417,28 +419,48 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 				dest = context.frbuff_p.p8 + len;
 				plen = len - context.Xtogo;
 				if(plen > 0) {
-					dest += (i->parent->width - i->width);
-				}
-				context.frbuff_p.p8 = dest;
-				while(act_code > clr) { /* code non concret */
-					/* fillstackloop empile les suffixes ! */
-					*(--dest) = ab[act_code].suffx;
-					if(--plen == 0) dest -= (i->parent->width - i->width);	/* back to the 1st line */
-					act_code = ab[act_code].prfx;	/* prefixe */
+					dest += stride;
+					context.frbuff_p.p8 = dest;
+					do {
+						/* fillstackloop empile les suffixes ! */
+						*(--dest) = ab[act_code].suffx;
+						act_code = ab[act_code].prfx;	/* prefixe */
+					} while(--plen > 0);
+					dest -= stride;	/* back to the 1st line */
+					while(act_code > clr) { /* code non concret */
+						/* fillstackloop empile les suffixes ! */
+						*(--dest) = ab[act_code].suffx;
+						act_code = ab[act_code].prfx;	/* prefixe */
+					}
+#if 0
+					while(act_code > clr) { /* code non concret */
+						/* fillstackloop empile les suffixes ! */
+						*(--dest) = ab[act_code].suffx;
+						if(--plen == 0) dest -= stride;	/* back to the 1st line */
+						act_code = ab[act_code].prfx;	/* prefixe */
+					}
+#endif
+				} else {
+					context.frbuff_p.p8 = dest;
+					while(act_code > clr) { /* code non concret */
+						/* fillstackloop empile les suffixes ! */
+						*(--dest) = ab[act_code].suffx;
+						act_code = ab[act_code].prfx;	/* prefixe */
+					}
 				}
 				/* act_code est concret */
 				*(--dest) = act_code;
 				if(read_byt >= free) {
 					*(context.frbuff_p.p8++) = casspecial;
 					if(context.Xtogo == len)
-						context.frbuff_p.p8 += (i->parent->width - i->width);
+						context.frbuff_p.p8 += stride;
 					len++;
 				}
 				casspecial = act_code;	/* dernier debut de chaine ! */
 				for(context.Xtogo -= len; context.Xtogo <= 0; context.Xtogo += i->width) {
 					AdjustLine(i, &context);
 					if(context.Xtogo == 0)
-						context.frbuff_p.p8 += (i->parent->width - i->width);
+						context.frbuff_p.p8 += stride;
 				}
 #ifndef NGIFLIB_INDEXED_ONLY
 			} else {
