@@ -31,6 +31,7 @@ void manage_event() {
 			exit(0);
 		case SDL_KEYDOWN:
 			printf("Touche %s _\n", SDL_GetKeyName(event.key.keysym.sym));
+			if(event.key.keysym.sym == SDLK_ESCAPE) exit(0);
 			break;
 		case SDL_KEYUP:
 			printf("Touche %s ^\n", SDL_GetKeyName(event.key.keysym.sym));
@@ -150,18 +151,24 @@ int main(int argc, char* * argv) {
 			/*Mise à jour de la portion qui a changé */
 			SDL_UpdateRects(screen, 1, &dest);
 			SDL_Flip(screen);
-			if(animation->images[i].delay_time == 0) {
-				SDL_Delay(100);	/* default delay of 1/10th of seconds */
+			if(animation->image_count > 1) {
+				if(animation->images[i].delay_time == 0) {
+					SDL_Delay(100);	/* default delay of 1/10th of seconds */
+				} else {
+					SDL_Delay(10*animation->images[i].delay_time);
+				}
+				while(SDL_PollEvent(&event)) {
+					if(event.type == SDL_QUIT) {
+						printf("SDL_QUIT\n");
+						exit(0);
+					} else if(event.type == SDL_KEYDOWN) {
+						printf("Touche %s _\n", SDL_GetKeyName(event.key.keysym.sym));
+						if(event.key.keysym.sym == SDLK_ESCAPE) exit(0);
+					}
+				}
 			} else {
-				SDL_Delay(10*animation->images[i].delay_time);
-			}
-			while(SDL_PollEvent(&event)) {
-				if(event.type == SDL_QUIT) {
-					printf("SDL_QUIT\n");
-					exit(0);
-				} else if(event.type == SDL_KEYDOWN) {
-					printf("Touche %s _\n", SDL_GetKeyName(event.key.keysym.sym));
-					if(event.key.keysym.sym == SDLK_ESCAPE) exit(0);
+				for(;;) {
+					manage_event();
 				}
 			}
 		}
