@@ -20,6 +20,7 @@ OBJS = $(patsubst %.c,%.o,$(SRCS))
 DEPS = $(patsubst %.o,%.d,$(OBJS))
 
 REFIMGS = $(patsubst %_indexed.tga.gz,%.gif,$(wildcard ref/*_indexed.tga.gz))
+REFIMGS += $(patsubst %_indexed_out01.tga.gz,%.gif,$(wildcard ref/*_indexed_out01.tga.gz))
 
 all:	$(EXECUTABLES)
 
@@ -41,6 +42,7 @@ check:	gif2tga
 	@err=0 ;\
 	for tga in tmp/*.tga; do \
 		ref="ref/$$(basename $$tga|sed 's/_out01//').gz" ;\
+		if [ ! -f $$ref ] ; then ref="ref/$$(basename $$tga).gz" ; fi ;\
 		gunzip -c $$ref | cmp -l /dev/stdin $$tga || { echo "ERROR on $$tga" ; err=1; } ;\
 	done ;\
 	exit $$err
