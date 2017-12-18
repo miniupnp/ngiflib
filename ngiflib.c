@@ -668,8 +668,10 @@ int LoadGif(struct ngiflib_gif * g) {
 					       g->disp_method, g->delay_time, g->transparent_flag, g->transparent_color);
 #endif /* NGIFLIB_INDEXED_ONLY */
 					/* this propably should be adjusted depending on the disp_method
-					 * of the previous image */
-					if(g->transparent_flag && (g->nimg == 0)) FillGifBackGround(g);
+					 * of the _previous_ image. */
+					if(g->transparent_flag && ((g->nimg == 0) || g->disp_method == 2)) {
+						FillGifBackGround(g);
+					}
 					break;
 				case 0xFE:	/* Comment Extension. */
 #if !defined(NGIFLIB_NO_FILE)

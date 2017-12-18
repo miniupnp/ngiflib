@@ -160,9 +160,11 @@ printf("err=%d\n", err);
 		                               gif->width, gif->height, 8,
 									   0,0,0,0);
 		SDL_LockSurface(surface);
+		/*
 		if(gif->transparent_flag) {
 			SDL_SetColorKey(surface, SDL_SRCCOLORKEY, gif->transparent_color);
 		}
+		*/
 		for(i=0; i<gif->ncolors; i++) {
 			surface->format->palette->colors[i].r = gif->palette[i].r;
 			surface->format->palette->colors[i].g = gif->palette[i].g;
