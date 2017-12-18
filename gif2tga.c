@@ -148,8 +148,30 @@ int main(int argc, char * * argv) {
 				putc(img->palette[i].r, ftga);
 #endif /* NGIFLIB_PALETTE_USE_BYTES */
 			}
-			fwrite(gif->frbuff.p8, 1,
-			      (size_t)gif->width * (size_t)gif->height, ftga);
+			if(img->interlaced) {
+				unsigned int y, line;
+				for(y = 0; y < gif->height; y++) {
+					switch(y & 7) {
+					case 0:	/* 1st pass */
+						line = y >> 3;
+						break;
+					case 4:	/* 2nd pass */
+						line = (gif->height >> 3) + (y >> 3);
+						break;
+					case 2:	/* 3rd pass */
+					case 6:
+						line = (gif->height >> 2) + (y >> 2);
+						break;
+					default:	/* 4th pass */
+						line = (gif->height >> 1) + (y >> 1);
+					}
+					fwrite(gif->frbuff.p8 + line * gif->width, 1,
+					       (size_t)gif->width, ftga);
+				}
+			} else {
+				fwrite(gif->frbuff.p8, 1,
+				      (size_t)gif->width * (size_t)gif->height, ftga);
+			}
 		} else {
 			long l;
 			u32 pixel;

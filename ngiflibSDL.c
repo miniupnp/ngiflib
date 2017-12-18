@@ -10,7 +10,7 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 	SDL_Surface * surface;
 	struct ngiflib_gif * gif;
 	FILE *fgif;
-	int err,i;
+	int err, i;
 	u8 * pdst, * psrc;
 	u8 * p = NULL;
 #ifdef NGIFLIB_NO_FILE
@@ -80,11 +80,30 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 #endif /* NGIFLIB_PALETTE_USE_BYTES */
 	}
 	psrc = p; pdst = surface->pixels;
-	for(i=0; i<gif->height; i++)
+	for(i = 0; i < gif->height; i++)
 	{
-		memcpy(pdst, psrc, gif->width);
+		if(gif->cur_img->interlaced) {
+			int line;
+			switch(i & 7) {
+			case 0:	/* 1st pass */
+				line = i >> 3;
+				break;
+			case 4:	/* 2nd pass */
+				line = (gif->height >> 3) + (i >> 3);
+				break;
+			case 2:	/* 3rd pass */
+			case 6:
+				line = (gif->height >> 2) + (i >> 2);
+				break;
+			default:	/* 4th pass */
+				line = (gif->height >> 1) + (i >> 1);
+			}
+			memcpy(pdst, p + line * gif->width, gif->width);
+		} else {
+			memcpy(pdst, psrc, gif->width);
+			psrc += gif->width;
+		}
 		pdst += surface->pitch;
-		psrc += gif->width;
 	}
 	SDL_UnlockSurface(surface);
 	GifDestroy(gif);
