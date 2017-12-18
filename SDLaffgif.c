@@ -150,7 +150,11 @@ int main(int argc, char* * argv) {
 			/*Mise à jour de la portion qui a changé */
 			SDL_UpdateRects(screen, 1, &dest);
 			SDL_Flip(screen);
-			SDL_Delay(10*animation->images[i].delay_time);
+			if(animation->images[i].delay_time == 0) {
+				SDL_Delay(100);	/* default delay of 1/10th of seconds */
+			} else {
+				SDL_Delay(10*animation->images[i].delay_time);
+			}
 			while(SDL_PollEvent(&event)) {
 				if(event.type == SDL_QUIT) {
 					printf("SDL_QUIT\n");
