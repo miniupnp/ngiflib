@@ -246,7 +246,6 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	u16 clr;
 	u16 eof;
 	u16 free;
-	u16 maxsav;
 	u16 act_code = 0;
 	u16 old_code = 0;
 	u16 read_byt;
@@ -341,8 +340,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	eof = clr + 1;
 	free = clr + 2;
 	context.nbbit = i->imgbits + 1;
-	maxsav = (1 << context.nbbit) - 1;
-	context.max = maxsav;
+	context.max = clr + clr - 1; /* (1 << context.nbbit) - 1 */
 	/*stackp = stack_top = ab_stack + 4096;*/
 	/* initialize length */
 	for(act_code = 0; act_code < clr; act_code++) {
@@ -375,7 +373,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			/* clear */
 			free = clr + 2;
 			context.nbbit = i->imgbits + 1;
-			context.max = maxsav;
+			context.max = clr + clr - 1; /* (1 << context.nbbit) - 1 */
 			old_code = GetGifWord(i, &context);
 			casspecial = old_code;
 			/*WritePixel(i, &context, casspecial);*/ /*npix--;*/
