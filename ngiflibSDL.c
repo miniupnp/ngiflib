@@ -105,6 +105,8 @@ struct ngiflibSDL_animation * SDL_LoadAnimatedGif(const char * file)
 	int image_count = 0;
 	int image_count_max = 50;
 	struct ngiflibSDL_animation * animation = NULL;
+	struct ngiflib_rgb * current_palette = NULL;
+	int current_palette_size = 0;
 
 	fgif = fopen(file, "rb");
 	if(fgif==NULL)
@@ -132,7 +134,6 @@ struct ngiflibSDL_animation * SDL_LoadAnimatedGif(const char * file)
 #endif /* NGIFLIBSDL_LOG */
 #endif /* NGIFLIB_NO_FILE */
 	while((err = LoadGif(gif)) == 1) {
-printf("err=%d\n", err);
 		if(animation == NULL) {
 			animation = ngiflib_malloc(sizeof(struct ngiflibSDL_animation) + image_count_max*sizeof(struct ngiflibSDL_image));
 			if(animation == NULL)
@@ -165,11 +166,26 @@ printf("err=%d\n", err);
 			SDL_SetColorKey(surface, SDL_SRCCOLORKEY, gif->transparent_color);
 		}
 		*/
-		for(i=0; i<gif->ncolors; i++) {
+		if(gif->palette != gif->cur_img->palette) {
+			current_palette = gif->cur_img->palette;
+			current_palette_size = (1 << gif->cur_img->localpalbits);
+		} else if(current_palette == NULL) {
+			current_palette = gif->palette;
+			current_palette_size = gif->ncolors;
+		}
+		for(i = 0; i < current_palette_size; i++) {
+			surface->format->palette->colors[i].r = current_palette[i].r;
+			surface->format->palette->colors[i].g = current_palette[i].g;
+			surface->format->palette->colors[i].b = current_palette[i].b;
+			printf("#%02x%02x%02x ",  current_palette[i].r,  current_palette[i].g,  current_palette[i].b);
+		}
+		for(; i < gif->ncolors; i++) {
 			surface->format->palette->colors[i].r = gif->palette[i].r;
 			surface->format->palette->colors[i].g = gif->palette[i].g;
 			surface->format->palette->colors[i].b = gif->palette[i].b;
+			printf("#%02x%02x%02x ",  gif->palette[i].r,  gif->palette[i].g,  gif->palette[i].b);
 		}
+		printf("\n");
 		psrc = p; pdst = surface->pixels;
 		for(i=0; i<gif->height; i++) {
 			memcpy(pdst, psrc, gif->width);
