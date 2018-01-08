@@ -400,7 +400,6 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	u16 ab_prfx[4096];
 	u8 ab_suffx[4096];
 	u8 ab_stack[4096];
-	u8 nbbitsav;
 	u8 flags;
 	u8 casspecial = 0;
 
@@ -482,9 +481,8 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	eof = clr + 1;
 	free = clr + 2;
 	freesav = free;
-	nbbitsav = i->imgbits + 1;
-	context.nbbit = nbbitsav;
-	maxsav = (1 << nbbitsav) - 1;
+	context.nbbit = i->imgbits + 1;
+	maxsav = (1 << context.nbbit) - 1;
 	context.max = maxsav;
 	stackp = stack_top = ab_stack + 4096;
 	
@@ -511,7 +509,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 #endif /* !defined(NGIFLIB_NO_FILE) */
 			/* clear */
 			free = freesav;
-			context.nbbit = nbbitsav;
+			context.nbbit = i->imgbits + 1;
 			context.max = maxsav;
 			act_code = GetGifWord(i, &context);
 			casspecial = (u8)act_code;
