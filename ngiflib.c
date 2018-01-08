@@ -507,7 +507,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 		}	
 		if(act_code==clr) {
 #if !defined(NGIFLIB_NO_FILE)
-			if(i->parent && i->parent->log) fprintf(i->parent->log, "Code clear (free=%hu)\n", free);
+			if(i->parent && i->parent->log) fprintf(i->parent->log, "Code clear (free=%hu) npix=%ld\n", free, npix);
 #endif /* !defined(NGIFLIB_NO_FILE) */
 			/* clear */
 			free = freesav;
@@ -534,6 +534,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			casspecial = (u8)act_code;	/* dernier debut de chaine ! */
 			*(--stackp) = casspecial;	/* push on stack */
 			WritePixels(i, &context, stackp, stack_top - stackp);	/* unstack all pixels at once */
+			npix -= (stack_top - stackp);
 			stackp = stack_top;
 /*			putchar('\n'); */
 			if(free < 4096) { /* la taille du dico est 4096 max ! */
