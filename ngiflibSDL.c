@@ -68,9 +68,9 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 	                               gif->width, gif->height, 8,
 								   0,0,0,0);
 	SDL_LockSurface(surface);
-	if(gif->transparent_flag)
+	if(gif->cur_img->gce.transparent_flag)
 	{
-		SDL_SetColorKey(surface, SDL_SRCCOLORKEY, gif->transparent_color);
+		SDL_SetColorKey(surface, SDL_SRCCOLORKEY, gif->cur_img->gce.transparent_color);
 	}
 	for(i=0; i<gif->ncolors; i++)
 	{
@@ -81,7 +81,7 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 	psrc = p; pdst = surface->pixels;
 	for(i=0; i<gif->height; i++)
 	{
-		memcpy(pdst, psrc, gif->width);
+		ngiflib_memcpy(pdst, psrc, gif->width);
 		pdst += surface->pitch;
 		psrc += gif->width;
 	}
@@ -188,13 +188,15 @@ struct ngiflibSDL_animation * SDL_LoadAnimatedGif(const char * file)
 		printf("\n");
 		psrc = p; pdst = surface->pixels;
 		for(i=0; i<gif->height; i++) {
-			memcpy(pdst, psrc, gif->width);
+			ngiflib_memcpy(pdst, psrc, gif->width);
 			pdst += surface->pitch;
 			psrc += gif->width;
 		}
 		SDL_UnlockSurface(surface);
 		animation->images[image_count].delay_time = -1;
-		animation->images[image_count].delay_time = gif->delay_time;
+		if(gif->cur_img->gce.gce_present) {
+			animation->images[image_count].delay_time = gif->cur_img->gce.delay_time;
+		}
 		animation->images[image_count].surface = surface;
 		image_count++;
 	}

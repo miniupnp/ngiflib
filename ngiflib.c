@@ -95,7 +95,7 @@ static int GetByteStr(struct ngiflib_gif * g, u8 * p, int n) {
 #ifndef NGIFLIB_NO_FILE
 	if(g->mode & NGIFLIB_MODE_FROM_MEM) {
 #endif /* NGIFLIB_NO_FILE */
-		memcpy(p, g->input.bytes, n);
+		ngiflib_memcpy(p, g->input.bytes, n);
 		g->input.bytes += n;
 		return 0;
 #ifndef NGIFLIB_NO_FILE
@@ -113,7 +113,7 @@ static int GetByteStr(struct ngiflib_gif * g, u8 * p, int n) {
 static void WritePixel(struct ngiflib_img * i, struct ngiflib_decode_context * context, u8 v) {
 	struct ngiflib_gif * p = i->parent;
 
-	if(v!=p->transparent_color || !p->transparent_flag) {
+	if(v!=i->gce.transparent_color || !i->gce.transparent_flag) {
 #ifndef NGIFLIB_INDEXED_ONLY
 		if(p->mode & NGIFLIB_MODE_INDEXED) {
 #endif /* NGIFLIB_INDEXED_ONLY */
@@ -199,7 +199,7 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 
 	while(n > 0) {
 		tocopy = (context->Xtogo < n) ? context->Xtogo : n;
-		if(!p->transparent_flag) {
+		if(!i->gce.transparent_flag) {
 #ifndef NGIFLIB_INDEXED_ONLY
 			if(p->mode & NGIFLIB_MODE_INDEXED) {
 #endif /* NGIFLIB_INDEXED_ONLY */
@@ -221,14 +221,14 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 			if(p->mode & NGIFLIB_MODE_INDEXED) {
 #endif /* NGIFLIB_INDEXED_ONLY */
 				for(j = (int)tocopy; j > 0; j--) {
-					if(*pixels != p->transparent_color) *context->frbuff_p.p8 = *pixels;
+					if(*pixels != i->gce.transparent_color) *context->frbuff_p.p8 = *pixels;
 					pixels++;
 					context->frbuff_p.p8++;
 				}
 #ifndef NGIFLIB_INDEXED_ONLY
 			} else {
 				for(j = (int)tocopy; j > 0; j--) {
-					if(*pixels != p->transparent_color) {
+					if(*pixels != i->gce.transparent_color) {
 						*context->frbuff_p.p32 = GifIndexToTrueColor(i->palette, *pixels);
 					}
 					pixels++;
@@ -557,11 +557,13 @@ static int DecodeGifImg(struct ngiflib_img * i) {
  * rappeler pour decoder les images suivantes
  * ------------------------------------------------ */
 int LoadGif(struct ngiflib_gif * g) {
+	struct ngiflib_gce gce;
 	u8 sign;
 	u8 tmp;
 	int i;
 
-	if(!g) return -1;	
+	if(!g) return -1;
+	gce.gce_present = 0;
 	
 	if(g->nimg==0) {
 		GetByteStr(g, g->signature, 6);
@@ -596,7 +598,6 @@ int LoadGif(struct ngiflib_gif * g) {
 		g->ncolors = 1 << g->imgbits;
 
 		g->backgroundindex = GetByte(g);
-		g->transparent_flag = 0;
 
 #if !defined(NGIFLIB_NO_FILE)
 		if(g->log) fprintf(g->log, "%hux%hu %hhubits %hu couleurs  bg=%hhu\n",
@@ -651,18 +652,19 @@ int LoadGif(struct ngiflib_gif * g) {
 				case 0xF9:	/* Graphic Control Extension */
 					/* The scope of this extension is the first graphic
 					 * rendering block to follow. */
-					g->disp_method = (ext[0] >> 2) & 7;
-					g->transparent_flag = ext[0] & 1;
-					g->userinputflag = (ext[0] >> 1) & 1;
-					g->delay_time = ext[1] | (ext[2]<<8);
-					g->transparent_color = ext[3];
+					gce.gce_present = 1;
+					gce.disposal_method = (ext[0] >> 2) & 7;
+					gce.transparent_flag = ext[0] & 1;
+					gce.user_input_flag = (ext[0] >> 1) & 1;
+					gce.delay_time = ext[1] | (ext[2]<<8);
+					gce.transparent_color = ext[3];
 #if !defined(NGIFLIB_NO_FILE)
-					if(g->log) fprintf(g->log, "disp_method=%hhu delay_time=%hu (transp=%hhu)transparent_color=0x%02hhX\n",
-					       g->disp_method, g->delay_time, g->transparent_flag, g->transparent_color);
+					if(g->log) fprintf(g->log, "disposal_method=%hhu delay_time=%hu (transp=%hhu)transparent_color=0x%02hhX\n",
+					       gce.disposal_method, gce.delay_time, gce.transparent_flag, gce.transparent_color);
 #endif /* NGIFLIB_INDEXED_ONLY */
-					/* this propably should be adjusted depending on the disp_method
+					/* this propably should be adjusted depending on the disposal_method
 					 * of the _previous_ image. */
-					if(g->transparent_flag && ((g->nimg == 0) || g->disp_method == 2)) {
+					if(gce.transparent_flag && ((g->nimg == 0) || gce.disposal_method == 2)) {
 						FillGifBackGround(g);
 					}
 					break;
@@ -735,6 +737,11 @@ int LoadGif(struct ngiflib_gif * g) {
 			}
 			g->cur_img->next = NULL;
 			g->cur_img->parent = g;
+			if(gce.gce_present) {
+				ngiflib_memcpy(&g->cur_img->gce, &gce, sizeof(struct ngiflib_gce));
+			} else {
+				ngiflib_memset(&g->cur_img->gce, 0,  sizeof(struct ngiflib_gce));
+			}
 			DecodeGifImg(g->cur_img);
 			g->nimg++;
 

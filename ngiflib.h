@@ -53,11 +53,22 @@ typedef void (*ngiflib_palette_cb)(struct ngiflib_gif *, struct ngiflib_rgb *, i
 typedef void (*ngiflib_line_cb)(struct ngiflib_gif *, union ngiflib_pixpointer, int);
 #endif /* NGIFLIB_ENABLE_CALLBACKS */
 
+/* struct stoquant un Graphic Control Extension */
+struct ngiflib_gce {
+	u16 delay_time;	/* 1/100 of seconds or 0 */
+	u8 transparent_color;
+	u8 disposal_method:3;	/* see below */
+	u8 user_input_flag:1;	/* User input is : 0 = not expected. 1 = expected. */
+	u8 transparent_flag:1;
+	u8 gce_present:1;
+};
+
 /* struct stoquant les parametres relatifs a une image. */
 struct ngiflib_img {
 	struct ngiflib_img * next;
 	struct ngiflib_gif * parent;
 	struct ngiflib_rgb * palette;
+	struct ngiflib_gce gce;
 	u16 ncolors;
 	u16 width;
 	u16 height;
@@ -136,13 +147,8 @@ struct ngiflib_gif {
 	u16 ncolors;
 	u16 width;
 	u16 height;
-	u16 delay_time;	/* 1/100 of seconds or 0 */
 	u8 backgroundindex;
 	u8 pixaspectratio;	/* width/height = (pixaspectratio + 15) / 64 */
-	u8 disp_method;	/* see above */
-	u8 userinputflag;	/* User input is : 0 = not expected. 1 = expected. */
-	u8 transparent_color;
-	u8 transparent_flag;
 	u8 imgbits;
 	u8 colorresolution;
 	u8 sort_flag;
