@@ -89,17 +89,37 @@ int main(int argc, char* * argv) {
 	char * gifname;
 	struct ngiflibSDL_animation * animation;
 	int i;
+	int width, height;
+	char windows_caption[256];
+	char icon_caption[256];
 	
 	if(argc>1)
 		gifname = argv[1];
 	else
 		gifname = "amigagry.gif";
+
 	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER) < 0) {
 		fprintf(stderr, "Erreur d'init de la SDL !\n");
 		return 1;
 	}
 	atexit(SDL_Quit);
-	SDL_WM_SetCaption("SDL gif viewer", "gif viewer"); /* window caption, icon caption */
+
+	animation = SDL_LoadAnimatedGif(gifname);
+	if(animation == NULL) {
+		fprintf(stderr, "Failed to read %s\n", gifname);
+		return 1;
+	}
+
+	if(animation->image_count == 0) {
+		fprintf(stderr, "%s contains 0 images !\n", gifname);
+		return 1;
+	}
+	width = animation->images[0].surface->w;
+	height = animation->images[0].surface->h;
+
+	snprintf(windows_caption, sizeof(windows_caption), "SDL gif viewer : %s", gifname);
+	snprintf(icon_caption, sizeof(icon_caption), "gif viewer : %s", gifname);
+	SDL_WM_SetCaption(windows_caption, icon_caption); /* window caption, icon caption */
 	vidinf = SDL_GetVideoInfo();
 	printf("bpp of the \"best\" video mode = %d \n", vidinf->vfmt->BitsPerPixel);
 	modes = SDL_ListModes(NULL, SDL_HWSURFACE);
@@ -113,14 +133,14 @@ int main(int argc, char* * argv) {
 		}
 	}
 
-	bpp = SDL_VideoModeOK(640, 480, 16, SDL_HWSURFACE | SDL_DOUBLEBUF);
+	bpp = SDL_VideoModeOK(width, height, 16, SDL_HWSURFACE | SDL_DOUBLEBUF);
 
 	if(!bpp){
 		printf("Mode not available.\n");
 		exit(-1);
 	}
-	printf("SDL Recommends 640x480@%dbpp.\n", bpp);
-	screen = SDL_SetVideoMode(640, 480, bpp, SDL_HWSURFACE | SDL_DOUBLEBUF);
+	printf("SDL Recommends %dx%d@%dbpp.\n", width, height, bpp);
+	screen = SDL_SetVideoMode(width, height, bpp, SDL_HWSURFACE | SDL_DOUBLEBUF);
 #if 0
 	/* code to display single image : */
 	ShowGIF(gifname, screen, 0,0);
@@ -131,9 +151,7 @@ int main(int argc, char* * argv) {
 	}
 #endif
 
-	animation = SDL_LoadAnimatedGif(gifname);
-	printf("SDL_LoadAnimatedGif(%s) => %p\n", gifname, animation);
-	if(animation != NULL) {
+	{
 		printf("%d images\n", animation->image_count);
 		for(;;)
 		for(i = 0; i < animation->image_count; i++) {
@@ -154,7 +172,7 @@ int main(int argc, char* * argv) {
 			if(animation->image_count > 1) {
 				if(animation->images[i].delay_time == 0) {
 					SDL_Delay(100);	/* default delay of 1/10th of seconds */
-				} else {
+				} else if(animation->images[i].delay_time > 0) {
 					SDL_Delay(10*animation->images[i].delay_time);
 				}
 				while(SDL_PollEvent(&event)) {

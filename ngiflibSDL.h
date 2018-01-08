@@ -6,7 +6,7 @@
 SDL_Surface *SDL_LoadGIF(const char *file);
 
 struct ngiflibSDL_image {
-		unsigned int delay_time;
+		int delay_time;
 		SDL_Surface * surface;
 };
 
