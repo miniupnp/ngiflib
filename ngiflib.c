@@ -623,9 +623,11 @@ int LoadGif(struct ngiflib_gif * g) {
 		} else {
 			g->palette = NULL;
 		}
+		g->netscape_loop_count = -1;
 	}
 
 	for(;;) {
+		char appid_auth[11];
 		u8 id,size;
 		int blockindex;
 
@@ -678,18 +680,16 @@ int LoadGif(struct ngiflib_gif * g) {
 					}
 #endif /* NGIFLIB_INDEXED_ONLY */
 					break;
-				case 0xFF:	/* app extension      faire qqch avec ? */
+				case 0xFF:	/* application extension */
 					/* NETSCAPE2.0 extension :
 					 * http://www.vurdalakov.net/misc/gif/netscape-looping-application-extension */
 					if(blockindex==0) {
-						char appid[9];
-						ngiflib_memcpy(appid, ext, 8);
-						appid[8] = 0;
+						ngiflib_memcpy(appid_auth, ext, 11);
 #if !defined(NGIFLIB_NO_FILE)
 						if(g->log) {
 							fprintf(g->log, "---------------- Application extension ---------------\n");
-							fprintf(g->log, "Application identifier : '%s', auth code : %02X %02X %02X (",
-							        appid, ext[8], ext[9], ext[10]);
+							fprintf(g->log, "Application identifier : '%.8s', auth code : %02X %02X %02X (",
+							        appid_auth, ext[8], ext[9], ext[10]);
 							fputc((ext[8]<32)?' ':ext[8], g->log);
 							fputc((ext[9]<32)?' ':ext[9], g->log);
 							fputc((ext[10]<32)?' ':ext[10], g->log);
@@ -710,6 +710,18 @@ int LoadGif(struct ngiflib_gif * g) {
 							fprintf(g->log, "'\n");
 						}
 #endif /* NGIFLIB_INDEXED_ONLY */
+						if(0 == ngiflib_memcmp(appid_auth, "NETSCAPE2.0", 11)) {
+							/* ext[0] : Sub-block ID */
+							if(ext[0] == 1) {
+								/* 1 : Netscape Looping Extension. */
+								g->netscape_loop_count = (int)ext[1] | ((int)ext[2] << 8);
+#if !defined(NGIFLIB_NO_FILE)
+								if(g->log) {
+									fprintf(g->log, "NETSCAPE loop_count = %d\n", g->netscape_loop_count);
+								}
+#endif /* NGIFLIB_NO_FILE */
+							}
+						}
 					}
 					break;
 				case 0x01:	/* plain text extension */

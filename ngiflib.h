@@ -21,6 +21,7 @@ typedef uint32_t u32;
 #include <string.h>
 #define ngiflib_memcpy memcpy
 #define ngiflib_memset memset
+#define ngiflib_memcmp memcmp
 
 #ifndef NGIFLIB_NO_FILE
 #include <stdio.h>
@@ -144,6 +145,7 @@ struct ngiflib_gif {
 	/* void * priv; */
 #endif /* NGIFLIB_ENABLE_CALLBACKS */
 	int nimg;
+	int netscape_loop_count;	/* from netscape animation extension */
 	u16 ncolors;
 	u16 width;
 	u16 height;
