@@ -683,6 +683,8 @@ int LoadGif(struct ngiflib_gif * g) {
 #endif /* NGIFLIB_INDEXED_ONLY */
 					break;
 				case 0xFF:	/* app extension      faire qqch avec ? */
+					/* NETSCAPE2.0 extension :
+					 * http://www.vurdalakov.net/misc/gif/netscape-looping-application-extension */
 					if(blockindex==0) {
 						char appid[9];
 						ngiflib_memcpy(appid, ext, 8);
