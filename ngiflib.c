@@ -641,14 +641,13 @@ int LoadGif(struct ngiflib_gif * g) {
 		case '!':	/* Extension introducer 0x21 */
 			id = GetByte(g);
 			blockindex = 0;
+#if !defined(NGIFLIB_NO_FILE)
+			if(g->log) fprintf(g->log, "extension (id=0x%02hhx)\n", id);
+#endif /* NGIFLIB_NO_FILE */
 			while( (size = GetByte(g)) ) {
 				u8 ext[256];
 
 				GetByteStr(g, ext, size);
-
-#if !defined(NGIFLIB_NO_FILE)
-				if(g->log) fprintf(g->log, "extension (id=0x%02hhx) index %d, size = %hhubytes\n",id,blockindex,size);
-#endif /* NGIFLIB_INDEXED_ONLY */
 
 				switch(id) {
 				case 0xF9:	/* Graphic Control Extension */
@@ -673,12 +672,11 @@ int LoadGif(struct ngiflib_gif * g) {
 				case 0xFE:	/* Comment Extension. */
 #if !defined(NGIFLIB_NO_FILE)
 					if(g->log) {
-						fprintf(g->log, "-------------------- Comment extension --------------------\n");
+						if(blockindex==0) fprintf(g->log, "-------------------- Comment extension --------------------\n");
 						ext[size] = '\0';
 						fputs((char *)ext, g->log);
-						fprintf(g->log, "-----------------------------------------------------------\n");
 					}
-#endif /* NGIFLIB_INDEXED_ONLY */
+#endif /* NGIFLIB_NO_FILE */
 					break;
 				case 0xFF:	/* application extension */
 					/* NETSCAPE2.0 extension :
@@ -727,7 +725,7 @@ int LoadGif(struct ngiflib_gif * g) {
 				case 0x01:	/* plain text extension */
 #if !defined(NGIFLIB_NO_FILE)
 					if(g->log) {
-						fprintf(g->log, "Plain text extension\n");
+						fprintf(g->log, "Plain text extension   blockindex=%d\n", blockindex);
 						for(i=0; i<size; i++) {
 							putc((ext[i]<32)?' ':ext[i], g->log);
 						}
@@ -737,6 +735,17 @@ int LoadGif(struct ngiflib_gif * g) {
 					break;
 				}
 				blockindex++;
+			}
+			switch(id) {
+			case 0x01:	/* plain text extension */
+			case 0xFE:	/* Comment Extension. */
+			case 0xFF:	/* application extension */
+#if !defined(NGIFLIB_NO_FILE)
+				if(g->log) {
+					fprintf(g->log, "-----------------------------------------------------------\n");
+				}
+#endif /* NGIFLIB_NO_FILE */
+				break;
 			}
 			break;
 		case 0x2C:	/* Image separator */
