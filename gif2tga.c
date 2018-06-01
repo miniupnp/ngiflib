@@ -23,7 +23,7 @@ int main(int argc, char * * argv) {
 #endif /* NGIFLIB_NO_FILE */
 
 	if(argc<2) {
-		printf("Usage: machin [--log logfile] [--indexed|-i] [--outbase path/file] truc.gif\n");
+		printf("Usage: %s [--log logfile] [--indexed|-i] [--outbase path/file] truc.gif\n", argv[0]);
 		return 1;
 	}
 	for(i=1; i < argc; i++) {
