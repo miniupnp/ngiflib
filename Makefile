@@ -22,6 +22,7 @@ DEPS = $(patsubst %.o,%.d,$(OBJS))
 
 REFIMGS = $(patsubst %_indexed.tga.gz,%.gif,$(wildcard ref/*_indexed.tga.gz))
 REFIMGS += $(patsubst %_indexed_out01.tga.gz,%.gif,$(wildcard ref/*_indexed_out01.tga.gz))
+INVALIDIMGS = $(wildcard invalid_gif/*.gif)
 
 all:	$(EXECUTABLES)
 
@@ -48,7 +49,12 @@ check:	gif2tga
 		gunzip -c $$ref | cmp -l /dev/stdin $$tga || { echo "ERROR on $$tga" ; err=1; } ;\
 	done ;\
 	exit $$err
-		
+	mkdir -p tmp/invalid
+	@for gif in $(INVALIDIMGS); do \
+		base=$$(basename $$gif .gif) ;\
+		./gif2tga --indexed --outbase tmp/invalid/$${base} $${gif} || { echo "ERROR on $$gif" ; exit 1; } ; \
+	done
+
 SDLaffgif:	SDLaffgif.o ngiflibSDL.o ngiflib.o
 
 gif2tga:	gif2tga.o ngiflib.o
