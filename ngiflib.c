@@ -530,9 +530,14 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			old_code = act_code;
 			if(npix > 0) WritePixel(i, &context, casspecial);
 			npix--;
+		} else if(act_code > free) {
+#if !defined(NGIFLIB_NO_FILE)
+			if(i->parent && i->parent->log) fprintf(i->parent->log, "Invalid code %hu (free=%hu) !\n", act_code, free);
+#endif /* !defined(NGIFLIB_NO_FILE) */
+			return -1;
 		} else {
 			read_byt = act_code;
-			if(act_code >= free) {	/* code pas encore dans alphabet */
+			if(act_code == free) {	/* code pas encore dans alphabet */
 /*				printf("Code pas dans alphabet : %d>=%d push %d\n", act_code, free, casspecial); */
 				*(--stackp) = casspecial; /* dernier debut de chaine ! */
 				act_code = old_code;
