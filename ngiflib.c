@@ -481,6 +481,12 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	i->ncolors = 1 << i->localpalbits;
 	
 	i->imgbits = GetByte(i->parent);	/* LZW Minimum Code Size */
+	if (i->imgbits > 11) {
+#if !defined(NGIFLIB_NO_FILE)
+		if(i->parent->log) fprintf(i->parent->log, "*** ERROR *** Invalid LZW Minimum Code Size : %d\n", (int)i->imgbits);
+#endif
+		return -1;
+	}
 
 #if !defined(NGIFLIB_NO_FILE)
 	if(i->parent && i->parent->log) {
@@ -791,7 +797,7 @@ int LoadGif(struct ngiflib_gif * g) {
 			} else {
 				ngiflib_memset(&g->cur_img->gce, 0,  sizeof(struct ngiflib_gce));
 			}
-			DecodeGifImg(g->cur_img);
+			if (DecodeGifImg(g->cur_img) < 0) return -1;
 			g->nimg++;
 
 			tmp = GetByte(g);/* 0 final */
