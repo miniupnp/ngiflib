@@ -785,12 +785,14 @@ int LoadGif(struct ngiflib_gif * g) {
 		case 0x2C:	/* Image separator */
 			if(g->nimg==0) {
 				g->cur_img = ngiflib_malloc(sizeof(struct ngiflib_img));
+				if(g->cur_img == NULL) return -2;    /* memory error */
 				g->first_img = g->cur_img;
 			} else {
 				g->cur_img->next = ngiflib_malloc(sizeof(struct ngiflib_img));
+				if(g->cur_img->next == NULL) return -2; /* memory error */
 				g->cur_img = g->cur_img->next;
 			}
-			g->cur_img->next = NULL;
+			ngiflib_memset(g->cur_img, 0,  sizeof(struct ngiflib_img));
 			g->cur_img->parent = g;
 			if(gce.gce_present) {
 				ngiflib_memcpy(&g->cur_img->gce, &gce, sizeof(struct ngiflib_gce));
