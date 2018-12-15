@@ -525,13 +525,20 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 		}	
 		if(act_code==clr) {
 #if !defined(NGIFLIB_NO_FILE)
-			if(i->parent && i->parent->log) fprintf(i->parent->log, "Code clear (free=%hu) npix=%ld\n", free, npix);
+			if(i->parent && i->parent->log) fprintf(i->parent->log, "Code clear (%hu) (free=%hu) npix=%ld\n", clr, free, npix);
 #endif /* !defined(NGIFLIB_NO_FILE) */
 			/* clear */
 			free = clr + 2;
 			context.nbbit = i->imgbits + 1;
 			context.max = clr + clr - 1; /* (1 << context.nbbit) - 1 */
-			act_code = GetGifWord(i, &context);
+			act_code = GetGifWord(i, &context);	/* the first code after the clear code is concrete */
+			if (act_code >= clr)
+			{
+#if !defined(NGIFLIB_NO_FILE)
+				if(i->parent && i->parent->log) fprintf(i->parent->log, "Invalid code %hu just after clear(%hu) !\n", act_code, clr);
+#endif /* !defined(NGIFLIB_NO_FILE) */
+				return -1;
+			}
 			casspecial = (u8)act_code;
 			old_code = act_code;
 			if(npix > 0) WritePixel(i, &context, casspecial);
