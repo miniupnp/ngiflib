@@ -6,7 +6,7 @@
 
 /* decodeur GIF en C portable (pas de pb big/little endian)
  * Thomas BERNARD. janvier 2004.
- * (c) 2004-2017 Thomas Bernard. All rights reserved
+ * (c) 2004-2019 Thomas Bernard. All rights reserved
  */
 
 /* Fonction de debug */
@@ -135,28 +135,30 @@ static void WritePixel(struct ngiflib_img * i, struct ngiflib_decode_context * c
 			break;
 		case 1:	/* 1st pass : every eighth row starting from 0 */
 			context->curY += 8;
-			if(context->curY >= p->height) {
-				context->pass++;
-				context->curY = i->posY + 4;
-			}
 			break;
 		case 2:	/* 2nd pass : every eighth row starting from 4 */
 			context->curY += 8;
-			if(context->curY >= p->height) {
-				context->pass++;
-				context->curY = i->posY + 2;
-			}
 			break;
 		case 3:	/* 3rd pass : every fourth row starting from 2 */
 			context->curY += 4;
-			if(context->curY >= p->height) {
-				context->pass++;
-				context->curY = i->posY + 1;
-			}
 			break;
 		case 4:	/* 4th pass : every odd row */
 			context->curY += 2;
 			break;
+		}
+		while(context->pass > 0 && context->pass < 4 &&
+		      context->curY >= p->height) {
+			switch(++context->pass) {
+			case 2:	/* 2nd pass : every eighth row starting from 4 */
+				context->curY = i->posY + 4;
+				break;
+			case 3:	/* 3rd pass : every fourth row starting from 2 */
+				context->curY = i->posY + 2;
+				break;
+			case 4:	/* 4th pass : every odd row */
+				context->curY = i->posY + 1;
+				break;
+			}
 		}
 #ifndef NGIFLIB_INDEXED_ONLY
 		if(p->mode & NGIFLIB_MODE_INDEXED) {
@@ -249,28 +251,30 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 				break;
 			case 1:	/* 1st pass : every eighth row starting from 0 */
 				context->curY += 8;
-				if(context->curY >= p->height) {
-					context->pass++;
-					context->curY = i->posY + 4;
-				}
 				break;
 			case 2:	/* 2nd pass : every eighth row starting from 4 */
 				context->curY += 8;
-				if(context->curY >= p->height) {
-					context->pass++;
-					context->curY = i->posY + 2;
-				}
 				break;
 			case 3:	/* 3rd pass : every fourth row starting from 2 */
 				context->curY += 4;
-				if(context->curY >= p->height) {
-					context->pass++;
-					context->curY = i->posY + 1;
-				}
 				break;
 			case 4:	/* 4th pass : every odd row */
 				context->curY += 2;
 				break;
+			}
+			while(context->pass > 0 && context->pass < 4 &&
+			      context->curY >= p->height) {
+				switch(++context->pass) {
+				case 2:	/* 2nd pass : every eighth row starting from 4 */
+					context->curY = i->posY + 4;
+					break;
+				case 3:	/* 3rd pass : every fourth row starting from 2 */
+					context->curY = i->posY + 2;
+					break;
+				case 4:	/* 4th pass : every odd row */
+					context->curY = i->posY + 1;
+					break;
+				}
 			}
 #ifndef NGIFLIB_INDEXED_ONLY
 			if(p->mode & NGIFLIB_MODE_INDEXED) {
