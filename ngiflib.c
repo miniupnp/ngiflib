@@ -70,7 +70,17 @@ static u8 GetByte(struct ngiflib_gif * g) {
 		return *(g->input.bytes++);
 #ifndef NGIFLIB_NO_FILE
 	} else {
+#ifdef DEBUG
+		int c = getc(g->input.file);
+		if (c != EOF)
+			return (u8)c;
+		else {
+			if(g->log) fprintf(g->log, "getc() returned EOF !\n");
+			return 0;
+		}
+#else
 		return (u8)(getc(g->input.file));
+#endif
 	}
 #endif /* NGIFLIB_NO_FILE */
 }
@@ -517,7 +527,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 		act_code = GetGifWord(i, &context);
 		if(act_code==eof) {
 #if !defined(NGIFLIB_NO_FILE)
-			if(i->parent && i->parent->log) fprintf(i->parent->log, "End of image code\n");
+			if(i->parent && i->parent->log) fprintf(i->parent->log, "End of image code 0x%x (nbbit=%u)\n", eof, context.nbbit);
 #endif /* !defined(NGIFLIB_NO_FILE) */
 			return 0;
 		}
