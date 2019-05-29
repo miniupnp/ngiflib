@@ -65,7 +65,7 @@ int main(int argc, char * * argv) {
 
 	fgif = fopen(input_file, "rb");
 	if(fgif==NULL) {
-		printf("Cannot open %s\n",argv[1]);
+		printf("Cannot open %s\n", input_file);
 		return 3;
 	}
 #ifdef NGIFLIB_NO_FILE
