@@ -130,8 +130,8 @@ static void WritePixel(struct ngiflib_img * i, struct ngiflib_decode_context * c
 			*context->frbuff_p.p8 = v;
 #ifndef NGIFLIB_INDEXED_ONLY
 		} else
-			*context->frbuff_p.p32 =
-			   GifIndexToTrueColor(i->palette, v);
+			*context->frbuff_p.p32 = v < i->ncolors ?
+			   GifIndexToTrueColor(i->palette, v) : 0;
 #endif /* NGIFLIB_INDEXED_ONLY */
 	}
 	if(--(context->Xtogo) <= 0) {
@@ -222,8 +222,9 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 			} else {
 				int j;
 				for(j = (int)tocopy; j > 0; j--) {
-					*(context->frbuff_p.p32++) =
-					   GifIndexToTrueColor(i->palette, *pixels++);
+					u8 v = *pixels++;
+					*(context->frbuff_p.p32++) = v < i->ncolors ?
+					   GifIndexToTrueColor(i->palette, v) : 0;
 				}
 			}
 #endif /* NGIFLIB_INDEXED_ONLY */
@@ -241,7 +242,7 @@ static void WritePixels(struct ngiflib_img * i, struct ngiflib_decode_context * 
 			} else {
 				for(j = (int)tocopy; j > 0; j--) {
 					if(*pixels != i->gce.transparent_color) {
-						*context->frbuff_p.p32 = GifIndexToTrueColor(i->palette, *pixels);
+						*context->frbuff_p.p32 = *pixels < i->ncolors ? GifIndexToTrueColor(i->palette, *pixels) : 0;
 					}
 					pixels++;
 					context->frbuff_p.p32++;
@@ -386,7 +387,7 @@ static void FillGifBackGround(struct ngiflib_gif * g) {
 #ifndef NGIFLIB_INDEXED_ONLY
 	} else {
 		u32 * p = g->frbuff.p32;
-		bg_truecolor = GifIndexToTrueColor(g->palette, g->backgroundindex);
+		bg_truecolor = g->backgroundindex < g->ncolors ? GifIndexToTrueColor(g->palette, g->backgroundindex) : 0;
 		while(n-->0) *p++ = bg_truecolor;
 	}
 #endif /* NGIFLIB_INDEXED_ONLY */
@@ -489,6 +490,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 		if(i->parent->palette_cb) i->parent->palette_cb(i->parent, i->palette, localpalsize);
 #endif /* NGIFLIB_ENABLE_CALLBACKS */
 	} else {
+		/* use global palette */
 		i->palette = i->parent->palette;
 		i->localpalbits = i->parent->imgbits;
 	}

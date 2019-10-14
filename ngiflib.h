@@ -70,7 +70,7 @@ struct ngiflib_img {
 	struct ngiflib_gif * parent;
 	struct ngiflib_rgb * palette;
 	struct ngiflib_gce gce;
-	u16 ncolors;
+	u16 ncolors;		/* number of colors in the palette */
 	u16 width;
 	u16 height;
 	u16 posX;
@@ -146,7 +146,7 @@ struct ngiflib_gif {
 #endif /* NGIFLIB_ENABLE_CALLBACKS */
 	int nimg;
 	int netscape_loop_count;	/* from netscape animation extension */
-	u16 ncolors;
+	u16 ncolors;				/* number of colors in the palette */
 	u16 width;
 	u16 height;
 	u8 backgroundindex;
