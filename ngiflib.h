@@ -133,7 +133,10 @@ struct ngiflib_gif {
 #ifndef NGIFLIB_NO_FILE
 		FILE * file;
 #endif /* NGIFLIB_NO_FILE */
-		const u8 * bytes;
+		struct {
+			const u8 * bytes;
+			unsigned long count;
+		} buffer;
 	} input;	/* used by GetByte */
 	union ngiflib_pixpointer frbuff;	/* frame buffer    */
 #ifndef NGIFLIB_NO_FILE

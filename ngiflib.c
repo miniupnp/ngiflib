@@ -67,7 +67,12 @@ static u8 GetByte(struct ngiflib_gif * g) {
 #ifndef NGIFLIB_NO_FILE
 	if(g->mode & NGIFLIB_MODE_FROM_MEM) {
 #endif /* NGIFLIB_NO_FILE */
-		return *(g->input.bytes++);
+		if (g->input.buffer.count > 0) {
+			g->input.buffer.count--;
+			return *(g->input.buffer.bytes++);
+		} else {
+			return 0;
+		}
 #ifndef NGIFLIB_NO_FILE
 	} else {
 #ifdef DEBUG
@@ -105,9 +110,15 @@ static int GetByteStr(struct ngiflib_gif * g, u8 * p, int n) {
 #ifndef NGIFLIB_NO_FILE
 	if(g->mode & NGIFLIB_MODE_FROM_MEM) {
 #endif /* NGIFLIB_NO_FILE */
-		ngiflib_memcpy(p, g->input.bytes, n);
-		g->input.bytes += n;
-		return 0;
+		if (g->input.buffer.count >= (unsigned)n) {
+			ngiflib_memcpy(p, g->input.buffer.bytes, n);
+			g->input.buffer.count -= n;
+			g->input.buffer.bytes += n;
+			return 0;
+		} else {
+			/* buffer overrun */
+			return -1;
+		}
 #ifndef NGIFLIB_NO_FILE
 	} else {
 		size_t read;

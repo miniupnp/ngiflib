@@ -28,6 +28,10 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 #ifdef NGIFLIB_NO_FILE
 	fseek(fgif, 0, SEEK_END);
 	filesize = ftell(fgif);
+	if (filesize < 0) {
+		GifDestroy(gif);
+		return NULL;
+	}
 	fseek(fgif, 0, SEEK_SET);
 	buffer = malloc(filesize);
 	if(buffer == NULL) {
@@ -35,7 +39,8 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 		return NULL;
 	}
 	fread(buffer, 1, filesize, fgif);
-	gif->input.bytes = buffer;
+	gif->input.buffer.bytes = buffer;
+	gif->input.buffer.count = (unsigned long)filesize;
 	gif->mode = NGIFLIB_MODE_FROM_MEM | NGIFLIB_MODE_INDEXED;
 #else /* NGIFLIB_NO_FILE */
 	gif->input.file = fgif;
@@ -123,7 +128,8 @@ struct ngiflibSDL_animation * SDL_LoadAnimatedGif(const char * file)
 		return NULL;
 	}
 	fread(buffer, 1, filesize, fgif);
-	gif->input.bytes = buffer;
+	gif->input.buffer.bytes = buffer;
+	gif->input.buffer.count = (unsigned long)filesize;
 	gif->mode = NGIFLIB_MODE_FROM_MEM | NGIFLIB_MODE_INDEXED;
 #else /* NGIFLIB_NO_FILE */
 	gif->input.file = fgif;
