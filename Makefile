@@ -2,9 +2,9 @@ CC?=gcc
 CFLAGS?=-O -Wall
 CFLAGS+=-Wextra
 CFLAGS+=-g
-#CFLAGS+=-DDEBUG
-CFLAGS+=-DNGIFLIBSDL_LOG
-CFLAGS+=$(shell pkg-config sdl --cflags)
+#CPPFLAGS+=-DDEBUG
+CPPFLAGS+=-DNGIFLIBSDL_LOG
+CPPFLAGS+=$(shell pkg-config sdl --cflags)
 LDFLAGS=$(shell pkg-config sdl --libs-only-L)
 LDLIBS=$(shell pkg-config sdl --libs-only-l)
 DEPFLAGS = -MM -MT $(patsubst %.d,%.o,$@) -MT $@
@@ -62,7 +62,7 @@ gif2tga:	gif2tga.o ngiflib.o
 %.o:	%.c %.d
 
 %.d:	%.c
-	$(CC) $(CFLAGS) $(DEPFLAGS) -o $@ $<
+	$(CC) $(CPPFLAGS) $(DEPFLAGS) -o $@ $<
 
 ifneq ($(MAKECMDGOALS),clean)
 ifneq ($(MAKECMDGOALS),depclean)
