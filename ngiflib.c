@@ -492,6 +492,14 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 		if(i->parent && i->parent->log) fprintf(i->parent->log, "Local palette\n");
 #endif /* !defined(NGIFLIB_NO_FILE) */
 		i->palette = (struct ngiflib_rgb *)ngiflib_malloc(sizeof(struct ngiflib_rgb)*localpalsize);
+#ifdef EXTRA_MALLOC_CHECK
+		if(i->palette == NULL) {
+#if !defined(NGIFLIB_NO_FILE)
+			if(i->parent->log) fprintf(i->parent->log, "*** ERROR *** The value returned by 'ngiflib_malloc()' call at %s:%d location is NULL\n", __FILE__, __LINE__);
+#endif /* !defined(NGIFLIB_NO_FILE) */
+			return -2;    /* memory error */
+		}
+#endif /* EXTRA_MALLOC_CHECK */
 		for(k=0; k<localpalsize; k++) {
 			i->palette[k].r = GetByte(i->parent);
 			i->palette[k].g = GetByte(i->parent);
@@ -659,12 +667,30 @@ int LoadGif(struct ngiflib_gif * g) {
 		g->height = GetWord(g);
 		/* allocate frame buffer */
 #ifndef NGIFLIB_INDEXED_ONLY
-		if((g->mode & NGIFLIB_MODE_INDEXED)==0)
+		if((g->mode & NGIFLIB_MODE_INDEXED)==0) {
 			g->frbuff.p32 = ngiflib_malloc(4*(long)g->height*(long)g->width);
-		else
+#ifdef EXTRA_MALLOC_CHECK
+			if(g->frbuff.p32 == NULL) {
+#if !defined(NGIFLIB_NO_FILE)
+				if(g->log) fprintf(g->log, "*** ERROR *** The value returned by 'ngiflib_malloc()' call at %s:%d location is NULL\n", __FILE__, __LINE__);
+#endif /* !defined(NGIFLIB_NO_FILE) */
+				return -2;    /* memory error */
+			}
+#endif /* EXTRA_MALLOC_CHECK */
+		} else {
 #endif /* NGIFLIB_INDEXED_ONLY */
 			g->frbuff.p8 = ngiflib_malloc((long)g->height*(long)g->width);
-
+#ifdef EXTRA_MALLOC_CHECK
+			if(g->frbuff.p8 == NULL) {
+#if !defined(NGIFLIB_NO_FILE)
+				if(g->log) fprintf(g->log, "*** ERROR *** The value returned by 'ngiflib_malloc()' call at %s:%d location is NULL\n", __FILE__, __LINE__);
+#endif /* !defined(NGIFLIB_NO_FILE) */
+				return -2;    /* memory error */
+			}
+#endif /* EXTRA_MALLOC_CHECK */
+#ifndef NGIFLIB_INDEXED_ONLY
+		}
+#endif /* NGIFLIB_INDEXED_ONLY */
 		tmp = GetByte(g);/* <Packed Fields> = Global Color Table Flag       1 Bit
 		                                      Color Resolution              3 Bits
 		                                      Sort Flag                     1 Bit
@@ -686,6 +712,14 @@ int LoadGif(struct ngiflib_gif * g) {
 		if(tmp&0x80) {
 			/* la palette globale suit. */
 			g->palette = (struct ngiflib_rgb *)ngiflib_malloc(sizeof(struct ngiflib_rgb)*g->ncolors);
+#ifdef EXTRA_MALLOC_CHECK
+			if(g->palette == NULL) {
+#if !defined(NGIFLIB_NO_FILE)
+				if(g->log) fprintf(g->log, "*** ERROR *** The value returned by 'ngiflib_malloc()' call at %s:%d location is NULL\n", __FILE__, __LINE__);
+#endif /* !defined(NGIFLIB_NO_FILE) */
+				return -2;    /* memory error */
+			}
+#endif /* EXTRA_MALLOC_CHECK */
 			for(i=0; i<g->ncolors; i++) {
 				g->palette[i].r = GetByte(g);
 				g->palette[i].g = GetByte(g);

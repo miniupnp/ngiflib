@@ -57,8 +57,15 @@ int main(int argc, char * * argv) {
 		}
 	}
 
-	gif = (struct ngiflib_gif *)malloc(sizeof(struct ngiflib_gif));
-	memset(gif, 0, sizeof(struct ngiflib_gif));
+	gif = (struct ngiflib_gif *)ngiflib_malloc(sizeof(struct ngiflib_gif));
+#ifdef EXTRA_MALLOC_CHECK
+	if(gif == NULL) {
+		printf("Cannot allocate %ld bytes of memory.\n", sizeof(struct ngiflib_gif));
+		return 4;
+	}
+#endif /* EXTRA_MALLOC_CHECK */
+	ngiflib_memset(gif, 0, sizeof(struct ngiflib_gif));
+
 #ifndef NGIFLIB_NO_FILE
 	gif->log = log;
 #endif /* NGIFLIB_NO_FILE */

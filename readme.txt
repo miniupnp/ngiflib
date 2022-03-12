@@ -13,3 +13,4 @@ defines :
  NGIFLIB_INDEXED_ONLY :     remove code for truecolor output
  NGIFLIB_ENABLE_CALLBACKS : enable palette and line callbacks
  DNGIFLIBSDL_LOG :          enable log to stdout in ngiflibSDL.c
+ EXTRA_MALLOC_CHECK :       add null check for the return value of ngiflib_malloc() calls

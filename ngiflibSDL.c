@@ -24,6 +24,11 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 	if(fgif==NULL)
 		return NULL;
 	gif = (struct ngiflib_gif *)ngiflib_malloc(sizeof(struct ngiflib_gif));
+#ifdef EXTRA_MALLOC_CHECK
+	if(gif == NULL) {
+		return NULL;
+	}
+#endif /* EXTRA_MALLOC_CHECK */
 	ngiflib_memset(gif, 0, sizeof(struct ngiflib_gif));
 #ifdef NGIFLIB_NO_FILE
 	fseek(fgif, 0, SEEK_END);
@@ -117,6 +122,11 @@ struct ngiflibSDL_animation * SDL_LoadAnimatedGif(const char * file)
 	if(fgif==NULL)
 		return NULL;
 	gif = (struct ngiflib_gif *)ngiflib_malloc(sizeof(struct ngiflib_gif));
+#ifdef EXTRA_MALLOC_CHECK
+	if(gif == NULL) {
+		return NULL;
+	}
+#endif /* EXTRA_MALLOC_CHECK */
 	ngiflib_memset(gif, 0, sizeof(struct ngiflib_gif));
 #ifdef NGIFLIB_NO_FILE
 	fseek(fgif, 0, SEEK_END);
