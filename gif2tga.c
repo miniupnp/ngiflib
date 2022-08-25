@@ -125,6 +125,11 @@ int main(int argc, char * * argv) {
 		ftga = fopen(tganame, "wb");
 		if(ftga == NULL) {
 			fprintf(stderr, "cannot open file %s for writing.\n", tganame);
+			fclose(fgif);
+#ifdef NGIFLIB_NO_FILE
+			free(buffer);
+#endif
+			GifDestroy(gif);	/* libere la ram */
 			return 5;
 		}
 		putc(0, ftga);	/* 0 */
