@@ -189,19 +189,23 @@ struct ngiflibSDL_animation * SDL_LoadAnimatedGif(const char * file)
 			current_palette = gif->palette;
 			current_palette_size = gif->ncolors;
 		}
-		for(i = 0; i < current_palette_size; i++) {
-			surface->format->palette->colors[i].r = current_palette[i].r;
-			surface->format->palette->colors[i].g = current_palette[i].g;
-			surface->format->palette->colors[i].b = current_palette[i].b;
-			//printf("#%02x%02x%02x ",  current_palette[i].r,  current_palette[i].g,  current_palette[i].b);
+		if (current_palette != NULL) {
+			for(i = 0; i < current_palette_size; i++) {
+				surface->format->palette->colors[i].r = current_palette[i].r;
+				surface->format->palette->colors[i].g = current_palette[i].g;
+				surface->format->palette->colors[i].b = current_palette[i].b;
+				//printf("#%02x%02x%02x ",  current_palette[i].r,  current_palette[i].g,  current_palette[i].b);
+			}
+			for(; i < gif->ncolors; i++) {
+				surface->format->palette->colors[i].r = gif->palette[i].r;
+				surface->format->palette->colors[i].g = gif->palette[i].g;
+				surface->format->palette->colors[i].b = gif->palette[i].b;
+				//printf("#%02x%02x%02x ",  gif->palette[i].r,  gif->palette[i].g,  gif->palette[i].b);
+			}
+			//printf("\n");
+		} else {
+			fprintf(stderr, "no palette in GIF\n");
 		}
-		for(; i < gif->ncolors; i++) {
-			surface->format->palette->colors[i].r = gif->palette[i].r;
-			surface->format->palette->colors[i].g = gif->palette[i].g;
-			surface->format->palette->colors[i].b = gif->palette[i].b;
-			//printf("#%02x%02x%02x ",  gif->palette[i].r,  gif->palette[i].g,  gif->palette[i].b);
-		}
-		printf("\n");
 		psrc = p; pdst = surface->pixels;
 		for(i=0; i<gif->height; i++) {
 			ngiflib_memcpy(pdst, psrc, gif->width);
