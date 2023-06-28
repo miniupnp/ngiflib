@@ -11,6 +11,8 @@ FILE * ftga;
 int main(int argc, char * * argv) {
 	struct ngiflib_gif * gif;
 	struct ngiflib_img * img;
+	struct ngiflib_rgb * current_palette = NULL;
+	int current_palette_size = 0;
 	int err, i;
 	char tganame[256];
 	const char * input_file = NULL;
@@ -108,10 +110,19 @@ int main(int argc, char * * argv) {
 	  printf("LoadGif() returned %d\n", err);
 	
 	  if(err==1) {
-	  	int localpalsize;
 		char * p;
 		img = gif->cur_img;
-		localpalsize = 1 << img->localpalbits;
+		if (gif->palette != img->palette) {
+			current_palette = img->palette;
+			current_palette_size = (1 << img->localpalbits);
+		} else if(current_palette == NULL) {
+			current_palette = gif->palette;
+			current_palette_size = gif->ncolors;
+		}
+		if (current_palette == NULL) {
+			fprintf(stderr, "no palette in GIF\n");
+			break;
+		}
 		if(outbase) {
 			p = tganame + snprintf(tganame, sizeof(tganame), "%s", outbase);
 		} else {
@@ -138,8 +149,8 @@ int main(int argc, char * * argv) {
 			putc(1, ftga);/* With palette */
 			putc(0, ftga);/* Color Map Origin. */
 			putc(0, ftga);/*  "                */
-			putc(localpalsize & 255, ftga);/* Color Map Length. */
-			putc(localpalsize >> 8, ftga);/*  "                 */
+			putc(current_palette_size & 255, ftga);/* Color Map Length. */
+			putc(current_palette_size >> 8, ftga);/*  "                 */
 			putc(24, ftga);/* Color Map Entry Size. */
 			for(i=0; i<4; i++) putc(0, ftga);
 		} else {
@@ -154,7 +165,7 @@ int main(int argc, char * * argv) {
 		if(gif->mode & NGIFLIB_MODE_INDEXED) {
 			putc(8, ftga);	/* bits per pixel */
 			putc(32, ftga);	/* top down       */
-			for(i=0; i<localpalsize; i++) {
+			for(i = 0; i < current_palette_size; i++) {
 				putc(img->palette[i].b, ftga);
 				putc(img->palette[i].g, ftga);
 				putc(img->palette[i].r, ftga);
