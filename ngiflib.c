@@ -585,8 +585,10 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			}
 			casspecial = (u8)act_code;
 			old_code = act_code;
-			if(npix > 0) WritePixel(i, &context, casspecial);
-			npix--;
+			if(npix > 0) {
+				WritePixel(i, &context, casspecial);
+				npix--;
+			}
 		} else if(act_code > free) {
 #if !defined(NGIFLIB_NO_FILE)
 			if(i->parent && i->parent->log) fprintf(i->parent->log, "Invalid code %hu (free=%hu) !\n", act_code, free);
@@ -610,10 +612,11 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 			*(--stackp) = casspecial;	/* push on stack */
 			if(npix >= (stack_top - stackp)) {
 				WritePixels(i, &context, stackp, stack_top - stackp);	/* unstack all pixels at once */
+				npix -= (stack_top - stackp);
 			} else if(npix > 0) {	/* "pixel overflow" */
 				WritePixels(i, &context, stackp, npix);
+				npix = 0;
 			}
-			npix -= (stack_top - stackp);
 			stackp = stack_top;
 /*			putchar('\n'); */
 			if(free < 4096) { /* la taille du dico est 4096 max ! */
