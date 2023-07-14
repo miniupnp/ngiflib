@@ -166,9 +166,9 @@ int main(int argc, char * * argv) {
 			putc(8, ftga);	/* bits per pixel */
 			putc(32, ftga);	/* top down       */
 			for(i = 0; i < current_palette_size; i++) {
-				putc(img->palette[i].b, ftga);
-				putc(img->palette[i].g, ftga);
-				putc(img->palette[i].r, ftga);
+				putc(current_palette[i].b, ftga);
+				putc(current_palette[i].g, ftga);
+				putc(current_palette[i].r, ftga);
 			}
 			fwrite(gif->frbuff.p8, 1,
 			      (size_t)gif->width * (size_t)gif->height, ftga);
