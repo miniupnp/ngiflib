@@ -176,6 +176,10 @@ struct ngiflibSDL_animation * SDL_LoadAnimatedGif(const char * file)
 		surface = SDL_CreateRGBSurface(SDL_SWSURFACE | SDL_SRCCOLORKEY,
 		                               gif->width, gif->height, 8,
 									   0,0,0,0);
+		if (surface == NULL) {
+			fprintf(stderr, "SDL_CreateRGBSurface(..., %d, %d, 8, ...) failed : %s\n", gif->width, gif->height, SDL_GetError());
+			continue;
+		}
 		SDL_LockSurface(surface);
 		/*
 		if(gif->transparent_flag) {
