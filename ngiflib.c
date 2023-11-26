@@ -761,7 +761,8 @@ int LoadGif(struct ngiflib_gif * g) {
 			while( (size = GetByte(g)) ) {
 				u8 ext[256];
 
-				GetByteStr(g, ext, size);
+				if (GetByteStr(g, ext, size) != 0)
+					return -1;
 
 				switch(id) {
 				case 0xF9:	/* Graphic Control Extension */
