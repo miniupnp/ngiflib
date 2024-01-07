@@ -516,7 +516,7 @@ static int DecodeGifImg(struct ngiflib_img * i) {
 	i->ncolors = 1 << i->localpalbits;
 
 #ifndef NGIFLIB_INDEXED_ONLY
-	if (!(i->parent->mode & NGIFLIB_MODE_INDEXED)) {
+	if (!(i->parent->mode & NGIFLIB_MODE_INDEXED) && (i->palette == NULL)) {
 #if !defined(NGIFLIB_NO_FILE)
 		if(i->parent->log) fprintf(i->parent->log, "*** ERROR *** Cannot decode without palette\n");
 #endif
