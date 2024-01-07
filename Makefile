@@ -14,7 +14,7 @@ ifeq ($(OS), Darwin)
 LDLIBS += -framework Cocoa
 endif
 
-EXECUTABLES=gif2tga SDLaffgif
+EXECUTABLES=gif2tga SDLaffgif gif2txt
 
 SRCS = $(wildcard *.c)
 OBJS = $(patsubst %.c,%.o,$(SRCS))
@@ -58,6 +58,8 @@ check:	gif2tga
 SDLaffgif:	SDLaffgif.o ngiflibSDL.o ngiflib.o
 
 gif2tga:	gif2tga.o ngiflib.o
+
+gif2txt:	gif2txt.o ngiflib.o
 
 %.o:	%.c %.d
 
