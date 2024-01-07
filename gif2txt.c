@@ -249,7 +249,7 @@ void twolines(const u32 *p, u16 width, int nosecondline, enum ansi_color_mode m)
 					fputc(' ', stdout); /* U+0020 space */
 				}
 			}
-		} else if (upper == bg || lower == fg) {
+		} else if (upper == bg || (lower == fg && lower != NOCOL)) {
 			/* upper pixel is background, lower is foreground */
 			if (lower != fg) {
 				fg = setfg(lower, m);
