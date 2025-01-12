@@ -193,7 +193,7 @@ struct ngiflibSDL_animation * SDL_LoadAnimatedGif(const char * file)
 			current_palette = gif->palette;
 			current_palette_size = gif->ncolors;
 		}
-		if (current_palette != NULL) {
+		if (current_palette != NULL && gif->palette != NULL) {
 			for(i = 0; i < current_palette_size; i++) {
 				surface->format->palette->colors[i].r = current_palette[i].r;
 				surface->format->palette->colors[i].g = current_palette[i].g;
