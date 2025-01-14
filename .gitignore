@@ -1,5 +1,6 @@
 *.o
 SDLaffgif
 gif2tga
+gif2txt
 tmp/
 *.d
