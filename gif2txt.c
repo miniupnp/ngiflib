@@ -165,6 +165,7 @@ static u32 setfg(u32 fg, enum ansi_color_mode m) {
  * ESC[40m to ESC[47m    set background color (100 to 107 for bright color)
  * ESC[48;5;<n>m         set 8 bits background color
  * ESC[48;2;<r>,<g>,<b>m set 24 bits background color
+ * see https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
  */
 static u32 setbg(u32 bg, enum ansi_color_mode m) {
 	switch (m) {
@@ -272,6 +273,13 @@ void twolines(const u32 *p, u16 width, int nosecondline, enum ansi_color_mode m)
 #undef NOCOL
 }
 
+static void usage(FILE * out, const char * argv0) {
+	fprintf(out, "Usage: %s [--tc|--vga|--ansi] <file.gif>\n", argv0);
+	fprintf(out, "       --tc     use 24 bits true colors\n");
+	fprintf(out, "       --vga    use vga colors\n");
+	fprintf(out, "       --ansi   use the standard 16 \"ANSI\" colors\n");
+}
+
 int main(int argc, char **argv) {
 	struct ngiflib_gif *gif;
 	FILE *fgif;
@@ -280,7 +288,10 @@ int main(int argc, char **argv) {
 	int i;
 
 	for (i = 1; i < argc; i++) {
-		if (i == argc - 1) {
+		if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
+			usage(stdout, argv[0]);
+			return 0;
+		} else if (i == argc - 1) {
 			/* last argument => filename */
 			input_file = argv[i];
 		} else if(strcmp(argv[i], "--tc") == 0) {
@@ -291,7 +302,8 @@ int main(int argc, char **argv) {
 			mode = BASIC;
 		} else {
 			fprintf(stderr, "Unrecognized argument : \"%s\"\n", argv[i]);
-			/* TODO : usage */
+			usage(stderr, argv[0]);
+			return 1;
 		}
 	}
 
