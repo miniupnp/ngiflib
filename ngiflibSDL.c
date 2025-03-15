@@ -93,12 +93,15 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 		surface->format->palette->colors[i].g = gif->palette[i].g;
 		surface->format->palette->colors[i].b = gif->palette[i].b;
 	}
-	psrc = p; pdst = surface->pixels;
-	for(i=0; i<gif->height; i++)
+	if(gif->width > 0 && gif->height > 0)
 	{
-		ngiflib_memcpy(pdst, psrc, gif->width);
-		pdst += surface->pitch;
-		psrc += gif->width;
+		psrc = p; pdst = surface->pixels;
+		for(i=0; i<gif->height; i++)
+		{
+			ngiflib_memcpy(pdst, psrc, gif->width);
+			pdst += surface->pitch;
+			psrc += gif->width;
+		}
 	}
 	SDL_UnlockSurface(surface);
 	GifDestroy(gif);
