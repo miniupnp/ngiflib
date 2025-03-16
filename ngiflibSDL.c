@@ -87,11 +87,14 @@ SDL_Surface * SDL_LoadGIF(const char * file)
 	{
 		SDL_SetColorKey(surface, SDL_SRCCOLORKEY, gif->cur_img->gce.transparent_color);
 	}
-	for(i=0; i<gif->ncolors; i++)
+	if (gif->palette != NULL)
 	{
-		surface->format->palette->colors[i].r = gif->palette[i].r;
-		surface->format->palette->colors[i].g = gif->palette[i].g;
-		surface->format->palette->colors[i].b = gif->palette[i].b;
+		for(i=0; i<gif->ncolors; i++)
+		{
+			surface->format->palette->colors[i].r = gif->palette[i].r;
+			surface->format->palette->colors[i].g = gif->palette[i].g;
+			surface->format->palette->colors[i].b = gif->palette[i].b;
+		}
 	}
 	if(gif->width > 0 && gif->height > 0)
 	{
